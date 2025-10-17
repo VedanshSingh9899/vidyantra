@@ -1,0 +1,50 @@
+[
+  {
+    "id": "S001",
+    "name": "Aditya Vishwakarma",
+    "email": "caindia.sunil@gmail.com",
+    "phone": "555-0101",
+    "attendance": [
+      {
+        "date": "2025-10-15",
+        "status": "Absent"
+      }
+    ]
+  },
+  {
+    "id": "S002",
+    "name": "sunil kumar",
+    "email": "caindia.delhi@yahoo.com",
+    "phone": "555-0102",
+    "attendance": [
+      {
+        "date": "2025-10-15",
+        "status": "Present"
+      }
+    ]
+  },
+  {
+    "id": "S003",
+    "name": "Rohan Singh",
+    "email": "",
+    "phone": "555-0103",
+    "attendance": [
+      {
+        "date": "2025-10-15",
+        "status": "Present"
+      }
+    ]
+  },
+  {
+    "id": "S004",
+    "name": "Ananya Gupta",
+    "email": "ananya.gupta@example.com",
+    "phone": "555-0104",
+    "attendance": [
+      {
+        "date": "2025-10-15",
+        "status": "Present"
+      }
+    ]
+  }
+]

@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vidyasaar - Teacher Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #818cf8;
+      --secondary: #10b981;
+      --accent: #f59e0b;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --success: #10b981;
+      --bg-main: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #1e293b;
+      --border: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    #app { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .profile {
+      padding: 24px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+    }
+
+    .profile img {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      object-fit: cover;
+      border: 3px solid rgba(255,255,255,0.2);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .profile-info { flex: 1; }
+    .profile-info div:first-child { font-weight: 600; font-size: 16px; color: white; }
+    .profile-info div:last-child { font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+
+    .nav {
+      flex: 1;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: transparent;
+      border: none;
+      border-radius: 10px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: left;
+    }
+
+    .nav-btn:hover {
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--text-primary);
+      transform: translateX(4px);
+    }
+
+    .nav-btn.active {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .icon {
+      font-size: 20px;
+      width: 24px;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .sidebar-bottom {
+      padding: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Main Content */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .topbar {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+
+    .search {
+      flex: 1;
+      max-width: 500px;
+    }
+
+    .search input {
+      width: 100%;
+      padding: 10px 16px;
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .search input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .badge {
+      padding: 6px 16px;
+      background: linear-gradient(135deg, var(--secondary) 0%, #059669 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    }
+
+    /* Pages */
+    .pages {
+      flex: 1;
+      padding: 32px;
+      overflow-y: auto;
+    }
+
+    .page {
+      display: none;
+      animation: fadeIn 0.3s;
+    }
+
+    .page.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      font-size: 28px;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    h3 {
+      font-size: 18px;
+      margin-bottom: 16px;
+      color: var(--text-primary);
+    }
+
+    h4 {
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+      transition: all 0.3s;
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+    }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    /* Students Grid */
+    .students-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .student-avatar {
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .student-avatar:hover {
+      transform: scale(1.1);
+    }
+
+    .student-avatar img {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      object-fit: cover;
+      border: 3px solid var(--border);
+      transition: border-color 0.2s;
+    }
+
+    .student-avatar.present img { border-color: var(--success); }
+    .student-avatar.absent img { border-color: var(--danger); }
+
+    .student-avatar div {
+      font-size: 12px;
+      margin-top: 6px;
+      color: var(--text-secondary);
+    }
+
+    /* Live Feeds */
+    .live-feeds {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .live-tile {
+      aspect-ratio: 16/9;
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      border: 2px dashed var(--border);
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 20px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--border);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn.primary:hover {
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+      transform: translateY(-2px);
+    }
+
+    /* Tables */
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+
+    .table thead {
+      background: var(--bg-main);
+      border-radius: 10px;
+    }
+
+    .table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+
+    .table tbody tr:hover {
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    /* Controls */
+    .row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    select, input[type="text"], input[type="date"] {
+      padding: 10px 14px;
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    /* Upload Area */
+    .upload-area {
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      padding: 48px;
+      text-align: center;
+      transition: all 0.3s;
+      cursor: pointer;
+      background: var(--bg-main);
+    }
+
+    .upload-area:hover {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    .upload-inner {
+      color: var(--text-secondary);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    /* Lists */
+    .list-compact {
+      list-style: none;
+      margin-top: 12px;
+    }
+
+    .list-compact li {
+      padding: 10px 14px;
+      background: var(--bg-main);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s;
+    }
+
+    .list-compact li:hover {
+      background: var(--border);
+      transform: translateX(4px);
+    }
+
+    /* Topic List */
+    .topic-list {
+      margin-bottom: 16px;
+    }
+
+    .topic-item {
+      padding: 12px 16px;
+      background: var(--bg-main);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 4px solid var(--primary);
+    }
+
+    /* Footer */
+    .footer {
+      padding: 20px 32px;
+      text-align: center;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      background: var(--bg-secondary);
+    }
+
+    /* Attendance Modal */
+    .attendance-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .attendance-modal-content {
+      background: var(--bg-card);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 1200px;
+      max-height: 90vh;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .attendance-modal-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+    }
+
+    .attendance-modal-header h2 {
+      margin: 0;
+      color: white;
+      background: none;
+      -webkit-text-fill-color: white;
+    }
+
+    .close-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      transition: all 0.2s;
+    }
+
+    .close-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: rotate(90deg);
+    }
+
+    .attendance-controls {
+      padding: 20px 24px;
+      background: var(--bg-main);
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: end;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .control-group label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .attendance-stats {
+      padding: 16px 24px;
+      background: var(--bg-main);
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .stat-item.present .stat-value { color: var(--success); }
+    .stat-item.absent .stat-value { color: var(--danger); }
+    .stat-item.late .stat-value { color: var(--warning); }
+    .stat-item.percentage .stat-value { color: var(--primary); }
+
+    .bulk-actions {
+      padding: 16px 24px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      background: var(--bg-secondary);
+    }
+
+    .attendance-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    .attendance-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .attendance-table th {
+      position: sticky;
+      top: 0;
+      background: var(--bg-main);
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 13px;
+      text-transform: uppercase;
+      z-index: 10;
+    }
+
+    .attendance-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .status-select, .notes-input {
+      padding: 8px 12px;
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      width: 100%;
+    }
+
+    /* PDF Overlay */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .overlay.hidden { display: none; }
+
+    .overlay-content {
+      background: var(--bg-card);
+      width: 95vw;
+      height: 95vh;
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .pdf-toolbar {
+      padding: 12px 16px;
+      background: var(--bg-main);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .pdf-stage {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a1a;
+      overflow: auto;
+    }
+
+    #pdfCanvas, #annoCanvas {
+      display: block;
+    }
+
+    .pdf-canvas-wrap {
+      position: relative;
+    }
+
+    #annoCanvas {
+      position: absolute;
+      inset: 0;
+      cursor: crosshair;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 240px;
+      }
+
+      .grid-two {
+        grid-template-columns: 1fr;
+      }
+
+      .pages {
+        padding: 16px;
+      }
+
+      .topbar {
+        padding: 12px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="profile">
+        <img id="profileAvatar" src="https://i.pravatar.cc/100?img=12" alt="avatar" />
+        <div class="profile-info">
+          <div id="teacherName">Ms. R. Sharma</div>
+          <div id="teacherId">ID: TCHR-034</div>
+        </div>
+      </div>
+      
+      <nav class="nav">
+        <button class="nav-btn active" data-page="home"><span class="icon">🏠</span> Home</button>
+        <button class="nav-btn" data-page="upcoming"><span class="icon">📘</span> Upcoming Lectures</button>
+        <button class="nav-btn" data-page="attendance"><span class="icon">📊</span> Attendance</button>
+        <button class="nav-btn" data-page="myattendance"><span class="icon">📈</span> Your Attendance</button>
+        <button class="nav-btn" data-page="upload"><span class="icon">📤</span> Upload Notes</button>
+        <button class="nav-btn" data-page="reference"><span class="icon">📚</span> Reference Notes</button>
+        <button class="nav-btn" data-page="profile"><span class="icon">👤</span> Profile</button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <button id="settingsBtn" class="nav-btn" data-page="settings"><span class="icon">⚙️</span> Settings</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+      <header class="topbar">
+        <div class="search">
+          <input id="globalSearch" placeholder="🔍 Search students, subjects..." />
+        </div>
+        <div class="badge">Teacher</div>
+      </header>
+
+      <section class="pages">
+        <!-- HOME PAGE -->
+        <section id="page-home" class="page active">
+          <h2>Dashboard</h2>
+
+          <div class="grid-two">
+            <div class="card students-card">
+              <h3>Students — Quick Attendance View</h3>
+              <div id="studentsGrid" class="students-grid"></div>
+              <button id="openAttendancePortalBtn" class="btn primary" style="margin-top:20px; width:100%;">📋 Open Attendance Portal</button>
+            </div>
+
+            <div class="card live-card">
+              <h3>Live Feeds</h3>
+              <div class="live-feeds">
+                <div class="live-tile">📹 Live Feed 1</div>
+                <div class="live-tile">📹 Live Feed 2</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Recent Attendance Log</h3>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Class</th>
+                  <th>Section</th>
+                  <th>Present</th>
+                  <th>Absent</th>
+                  <th>Percentage</th>
+                </tr>
+              </thead>
+              <tbody id="attendanceLogTable">
+                <tr>
+                  <td>2024-10-15</td>
+                  <td>CSE-1</td>
+                  <td>A</td>
+                  <td style="color: var(--success);">18</td>
+                  <td style="color: var(--danger);">2</td>
+                  <td><span style="color: var(--primary); font-weight: 600;">90%</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- UPCOMING LECTURES -->
+        <section id="page-upcoming" class="page">
+          <h2>Upcoming Lectures</h2>
+          
+          <div class="card">
+            <div class="row">
+              <div style="flex: 1;">Today: <strong id="todayDate"></strong></div>
+            </div>
+
+            <table class="table schedule" style="margin-top: 20px;">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Class</th>
+                  <th>Subject</th>
+                  <th>Room</th>
+                </tr>
+              </thead>
+              <tbody id="scheduleTbody">
+                <tr>
+                  <td>09:00 - 10:00</td>
+                  <td>CSE-1</td>
+                  <td>Data Structures</td>
+                  <td>Room 301</td>
+                </tr>
+                <tr>
+                  <td>11:00 - 12:00</td>
+                  <td>CSE-2</td>
+                  <td>Algorithms</td>
+                  <td>Room 205</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <h3>📝 Topic Tracker</h3>
+            <div id="topicList" class="topic-list">
+              <div class="topic-item">
+                <span>Binary Search Trees - Completed</span>
+                <span style="color: var(--text-muted);">Oct 10</span>
+              </div>
+            </div>
+            <div class="row">
+              <input id="newTopicInput" placeholder="Add today's topic..." style="flex: 1;" />
+              <button id="addTopicBtn" class="btn primary">Add Topic</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ATTENDANCE -->
+        <section id="page-attendance" class="page">
+          <h2>Attendance Records</h2>
+
+          <div class="card">
+            <div class="row">
+              <select id="filterClass">
+                <option value="CSE-1">CSE-1</option>
+                <option value="CSE-2">CSE-2</option>
+                <option value="CSE-3">CSE-3</option>
+              </select>
+              <select id="filterSection">
+                <option value="A">Section A</option>
+                <option value="B">Section B</option>
+              </select>
+              <button id="applyFilter" class="btn primary">Load</button>
+              <div style="flex:1"></div>
+              <button id="exportCsv" class="btn primary">📥 Export CSV</button>
+            </div>
+
+            <div id="attendanceTable" class="table-wrap">
+              <table class="table" style="margin-top: 20px;">
+                <thead>
+                  <tr>
+                    <th>Roll No</th>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colspan="4" style="text-align: center; color: var(--text-muted);">Select class and section to view attendance</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- YOUR ATTENDANCE -->
+        <section id="page-myattendance" class="page">
+          <h2>Your Attendance</h2>
+          <div class="card">
+            <div style="display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--success);"></div>
+                <span style="font-size: 14px; color: var(--text-secondary);">Present</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 14px; height: 14px; border-radius: 50%; background: #fef9c3; border: 2px solid #e8be1a;"></div>
+                <span style="font-size: 14px; color: var(--text-secondary);">Medical</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 14px; height: 14px; border-radius: 50%; background: #ccfbf1; border: 2px solid #14b8a6;"></div>
+                <span style="font-size: 14px; color: var(--text-secondary);">Casual</span>
+              </div>
+            </div>
+
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Attendance %</th>
+                  <th>Leaves</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>F105</td>
+                  <td>Dr. Priya Singh</td>
+                  <td><span style="color: var(--success); font-weight: 600; font-size: 18px;">90%</span></td>
+                  <td>
+                    <span style="background: #ccfbf1; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; color: #195e57; margin-right: 8px;">Casual: 6/8</span>
+                    <span style="background: #fef9c3; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; color: #876d00;">Medical: 2/10</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- UPLOAD NOTES -->
+        <section id="page-upload" class="page">
+          <h2>Upload Notes</h2>
+
+          <div class="card">
+            <div class="row" style="margin-bottom: 20px;">
+              <select id="uploadClass">
+                <option value="CSE-1">CSE-1</option>
+                <option value="CSE-2">CSE-2</option>
+              </select>
+              <select id="uploadSection">
+                <option value="A">Section A</option>
+                <option value="B">Section B</option>
+              </select>
+              <select id="uploadSubject">
+                <option value="Maths">Mathematics</option>
+                <option value="English">English</option>
+                <option value="CS">Computer Science</option>
+              </select>
+              <button id="uploadGo" class="btn primary">Apply</button>
+            </div>
+
+            <div id="uploadArea" class="upload-area" onclick="document.getElementById('fileInput').click()">
+              <div class="upload-inner">
+                <div style="font-size: 48px; margin-bottom: 16px;">📁</div>
+                <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Drag & drop files here</div>
+                <div style="font-size: 14px; color: var(--text-muted);">or click to browse</div>
+                <input type="file" id="fileInput" multiple />
+              </div>
+            </div>
+
+            <div class="card" style="margin-top: 24px; background: var(--bg-main);">
+              <h4>Previously Uploaded Files</h4>
+              <ul id="uploadedFiles" class="list-compact">
+                <li>
+                  <span>📄 Data_Structures_Chapter_5.pdf</span>
+                  <span style="color: var(--text-muted); font-size: 13px;">Uploaded: Oct 10, 2024</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- REFERENCE NOTES -->
+        <section id="page-reference" class="page">
+          <h2>Reference Notes</h2>
+          <div class="card">
+            <div class="upload-area" id="refUploadArea" onclick="document.getElementById('refPdfInput').click()">
+              <div class="upload-inner">
+                <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
+                <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Upload Reference PDFs</div>
+                <div style="font-size: 14px; color: var(--text-muted);">Drag & drop PDF files or click to browse</div>
+                <input type="file" id="refPdfInput" accept="application/pdf" multiple />
+              </div>
+            </div>
+            
+            <div class="card" style="margin-top: 24px; background: var(--bg-main);">
+              <h4>Your Reference PDFs</h4>
+              <ul id="refNotesList" class="list-compact">
+                <li>
+                  <span>📕 Algorithm_Design_Manual.pdf</span>
+                  <button class="btn" style="padding: 6px 12px; font-size: 13px;">View</button>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- PROFILE -->
+        <section id="page-profile" class="page">
+          <h2>Profile</h2>
+          <div class="card">
+            <div class="row" style="align-items: flex-start; flex-wrap: wrap;">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <img id="profileLarge" src="https://i.pravatar.cc/100?img=12" alt="avatar" style="width:120px;height:120px;border-radius:16px;object-fit:cover;border:4px solid var(--primary);box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);"/>
+                <div style="margin-top:12px">
+                  <button class="btn primary" onclick="document.getElementById('avatarInput').click()">Change Photo</button>
+                  <input id="avatarInput" type="file" accept="image/*" />
+                </div>
+              </div>
+              
+              <div style="flex:1; min-width: 300px;">
+                <div style="margin-bottom: 16px;">
+                  <label style="color:var(--text-secondary);font-size:13px;display:block;margin-bottom:6px;">First Name</label>
+                  <input id="firstName" value="Ms. R." style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--bg-main);color:var(--text-primary);"/>
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                  <label style="color:var(--text-secondary);font-size:13px;display:block;margin-bottom:6px;">Last Name</label>
+                  <input id="lastName" value="Sharma" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--bg-main);color:var(--text-primary);"/>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                  <label style="color:var(--text-secondary);font-size:13px;display:block;margin-bottom:6px;">Department</label>
+                  <input id="rollClass" value="Tech-Depart-CSE-1" readonly style="width:100%;padding:10px 14px;border-radius:10px;background:var(--bg-main);border:1px solid var(--border);color:var(--text-muted);"/>
+                </div>
+                
+                <div class="row">
+                  <button id="saveProfile" class="btn primary">💾 Save Changes</button>
+                  <button id="cancelProfile" class="btn">Cancel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SETTINGS -->
+        <section id="page-settings" class="page">
+          <h2>Settings</h2>
+          <div class="card">
+            <h3>Notification Preferences</h3>
+            <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 16px;">
+              <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                <input type="checkbox" id="notifEmail" checked style="width: 20px; height: 20px; cursor: pointer;"/>
+                <span>📧 Email Notifications</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                <input type="checkbox" id="notifSms" style="width: 20px; height: 20px; cursor: pointer;"/>
+                <span>📱 SMS Notifications</span>
+              </label>
+            </div>
+            <div style="margin-top: 24px;">
+              <button class="btn primary" id="saveSettings">💾 Save Settings</button>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <footer class="footer">
+        <small>✨ Vidyasaar - The Intelligent Institution Ecosystem</small>
+      </footer>
+    </main>
+  </div>
+
+  <!-- PDF Overlay Viewer -->
+  <div id="pdfOverlay" class="overlay hidden">
+    <div class="overlay-content">
+      <div class="pdf-toolbar">
+        <button id="pdfCloseBtn" class="btn">✖ Close</button>
+        <button id="pdfPrevBtn" class="btn">◀ Prev</button>
+        <span id="pdfPageInfo" style="min-width:110px;text-align:center;color:var(--text-secondary);"></span>
+        <button id="pdfNextBtn" class="btn">Next ▶</button>
+        <div style="flex: 1;"></div>
+        <label style="color: var(--text-secondary);">Tool
+          <select id="toolSelect" style="margin-left: 8px;">
+            <option value="pen">Pen</option>
+            <option value="highlighter">Highlighter</option>
+            <option value="eraser">Eraser</option>
+          </select>
+        </label>
+        <label style="color: var(--text-secondary);">Color 
+          <input type="color" id="colorPicker" value="#ff0000" style="margin-left: 8px;">
+        </label>
+        <button id="pdfZoomOut" class="btn">-</button>
+        <button id="pdfZoomIn" class="btn">+</button>
+        <button id="annoClear" class="btn">Clear</button>
+        <button id="annoDownloadPng" class="btn primary">Download PNG</button>
+      </div>
+      <div class="pdf-stage">
+        <div class="pdf-canvas-wrap">
+          <canvas id="pdfCanvas"></canvas>
+          <canvas id="annoCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Navigation
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const page = btn.dataset.page;
+        
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(`page-${page}`).classList.add('active');
+      });
+    });
+
+    // Initialize students grid replaced by teacher_attendance_home.js
+    function initStudentsGrid() { /* now handled by external script */ }
+
+    // Set today's date
+    document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    // Add topic functionality
+    document.getElementById('addTopicBtn').addEventListener('click', () => {
+      const input = document.getElementById('newTopicInput');
+      const topic = input.value.trim();
+      if (topic) {
+        const topicList = document.getElementById('topicList');
+        const date = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const item = document.createElement('div');
+        item.className = 'topic-item';
+        item.innerHTML = `
+          <span>${topic}</span>
+          <span style="color: var(--text-muted);">${date}</span>
+        `;
+        topicList.insertBefore(item, topicList.firstChild);
+        input.value = '';
+      }
+    });
+
+    // Save profile
+    document.getElementById('saveProfile').addEventListener('click', () => {
+      alert('✅ Profile updated successfully!');
+    });
+
+    document.getElementById('cancelProfile').addEventListener('click', () => {
+      document.getElementById('firstName').value = 'Ms. R.';
+      document.getElementById('lastName').value = 'Sharma';
+    });
+
+    // Save settings
+    document.getElementById('saveSettings').addEventListener('click', () => {
+      alert('✅ Settings saved successfully!');
+    });
+
+    // File upload handling
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+      const files = e.target.files;
+      if (files.length > 0) {
+        alert(`✅ ${files.length} file(s) uploaded successfully!`);
+      }
+    });
+
+    document.getElementById('refPdfInput').addEventListener('change', (e) => {
+      const files = e.target.files;
+      if (files.length > 0) {
+        alert(`✅ ${files.length} PDF(s) uploaded successfully!`);
+      }
+    });
+
+    // Simple attendance manager (in-memory)
+    const attendanceData = {
+      currentClass: 'CSE-1',
+      currentSection: 'A',
+      currentDate: new Date().toISOString().split('T')[0],
+      students: [],
+      records: {}
+    };
+
+    // Initialize sample students
+    function initStudents() {
+      const names = [
+        'Aarav Kumar', 'Priya Singh', 'Rohan Sharma', 'Ananya Patel',
+        'Arjun Verma', 'Sneha Reddy', 'Vikram Joshi', 'Diya Gupta',
+        'Karan Mehta', 'Ishita Rao', 'Aditya Desai', 'Kavya Nair',
+        'Sahil Khan', 'Riya Malhotra', 'Manish Iyer', 'Pooja Chopra',
+        'Varun Bose', 'Nisha Agarwal', 'Rahul Sinha', 'Meera Pillai'
+      ];
+
+      attendanceData.students = names.map((name, i) => ({
+        id: `STU-${String(i + 1).padStart(3, '0')}`,
+        name: name,
+        rollNo: i + 1
+      }));
+    }
+
+    // Open attendance portal
+    document.getElementById('openAttendancePortalBtn').addEventListener('click', () => {
+      showAttendancePortal();
+    });
+
+    function showAttendancePortal() {
+      const modal = document.createElement('div');
+      modal.className = 'attendance-modal';
+      modal.innerHTML = `
+        <div class="attendance-modal-content">
+          <div class="attendance-modal-header">
+            <h2>📋 Mark Attendance</h2>
+            <button id="closeModal" class="close-btn">✖</button>
+          </div>
+          
+          <div class="attendance-controls">
+            <div class="control-group">
+              <label>Date</label>
+              <input type="date" id="attDate" value="${attendanceData.currentDate}">
+            </div>
+            <div class="control-group">
+              <label>Class</label>
+              <select id="attClass">
+                <option value="CSE-1">CSE-1</option>
+                <option value="CSE-2">CSE-2</option>
+                <option value="CSE-3">CSE-3</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label>Section</label>
+              <select id="attSection">
+                <option value="A">A</option>
+                <option value="B">B</option>
+              </select>
+            </div>
+            <button id="loadAtt" class="btn primary">Load</button>
+          </div>
+
+          <div class="attendance-stats" id="attStats">
+            <div class="stat-item"><span class="stat-label">Total</span><span class="stat-value">20</span></div>
+            <div class="stat-item present"><span class="stat-label">Present</span><span class="stat-value">0</span></div>
+            <div class="stat-item absent"><span class="stat-label">Absent</span><span class="stat-value">0</span></div>
+            <div class="stat-item percentage"><span class="stat-label">Attendance</span><span class="stat-value">0%</span></div>
+          </div>
+
+          <div class="bulk-actions">
+            <button class="btn" id="markAllPresent">✅ Mark All Present</button>
+            <button class="btn" id="markAllAbsent">❌ Mark All Absent</button>
+            <button class="btn primary" id="saveAtt">💾 Save Attendance</button>
+          </div>
+
+          <div class="attendance-list" id="attList"></div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      document.getElementById('closeModal').addEventListener('click', () => {
+        modal.remove();
+      });
+
+      renderAttendanceList();
+
+      document.getElementById('markAllPresent').addEventListener('click', () => {
+        document.querySelectorAll('.status-select').forEach(sel => sel.value = 'present');
+        updateStats();
+      });
+
+      document.getElementById('markAllAbsent').addEventListener('click', () => {
+        document.querySelectorAll('.status-select').forEach(sel => sel.value = 'absent');
+        updateStats();
+      });
+
+      document.getElementById('saveAtt').addEventListener('click', () => {
+        alert('✅ Attendance saved successfully!');
+      });
+    }
+
+    function renderAttendanceList() {
+      const container = document.getElementById('attList');
+      container.innerHTML = `
+        <table class="attendance-table">
+          <thead>
+            <tr>
+              <th>Roll No</th>
+              <th>Student ID</th>
+              <th>Name</th>
+              <th>Status</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${attendanceData.students.map(s => `
+              <tr>
+                <td>${s.rollNo}</td>
+                <td>${s.id}</td>
+                <td>${s.name}</td>
+                <td>
+                  <select class="status-select" data-id="${s.id}">
+                    <option value="unmarked">Unmarked</option>
+                    <option value="present">Present</option>
+                    <option value="absent">Absent</option>
+                    <option value="late">Late</option>
+                  </select>
+                </td>
+                <td><input type="text" class="notes-input" placeholder="Add notes..."></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+
+      document.querySelectorAll('.status-select').forEach(sel => {
+        sel.addEventListener('change', updateStats);
+      });
+
+      updateStats();
+    }
+
+    function updateStats() {
+      const selects = document.querySelectorAll('.status-select');
+      let present = 0, absent = 0;
+      selects.forEach(sel => {
+        if (sel.value === 'present') present++;
+        if (sel.value === 'absent') absent++;
+      });
+
+      const total = selects.length;
+      const percentage = total > 0 ? ((present / total) * 100).toFixed(1) : 0;
+
+      const stats = document.getElementById('attStats');
+      if (stats) {
+        stats.innerHTML = `
+          <div class="stat-item"><span class="stat-label">Total</span><span class="stat-value">${total}</span></div>
+          <div class="stat-item present"><span class="stat-label">Present</span><span class="stat-value">${present}</span></div>
+          <div class="stat-item absent"><span class="stat-label">Absent</span><span class="stat-value">${absent}</span></div>
+          <div class="stat-item percentage"><span class="stat-label">Attendance</span><span class="stat-value">${percentage}%</span></div>
+        `;
+      }
+    }
+
+    // Export CSV
+    document.getElementById('exportCsv').addEventListener('click', () => {
+      alert('📥 CSV export functionality - File would be downloaded');
+    });
+
+    // Initialize
+  initStudents();
+  </script>
+  <script src="teacher_attendance_home.js"></script>
+</body>
+</html>

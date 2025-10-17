@@ -1,0 +1,2461 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Vidyasaar — Student Dashboard (Enhanced)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="student_attendance.js"></script>
+  <style>
+    :root {
+      --bg: #060606;
+      --card-bg: #ffffffec;
+      --primary-accent: #7c3aed;
+      --muted: #9aa4b2;
+      --accent: #60a5fa;
+      --accent-2: #7c3aed;
+      --secondary-accent: #60a5fa;
+      --success: #34d399;
+      --danger: #fb7185;
+      --text-secondary: #718096;
+      --warning: #f59e0b;
+      --text: #e6eef6;
+      --text-dark: #111827;
+      --sidebar-bg: #0f1720;
+      --text-light: #1e293b;
+      --shadow: 0 4px 15px rgba(16, 24, 40, 0.06);
+      --shadow-lg: 0 10px 25px rgba(16, 24, 40, 0.08);
+      --border-color: #eef2f7;
+      --header-bg-light: #fdfdff;
+      --gradient-primary: linear-gradient(90deg, var(--secondary-accent), var(--primary-accent));
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    * {
+      box-sizing: border-box;
+      padding: 0;
+      margin: 0;
+    }
+
+    html,
+    body {
+      background: linear-gradient(180deg, #f6f8fb, var(--border-color));
+      color: var(--text-dark);
+      height: 100vh;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+      color: black;
+    }
+
+    #app {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* --- Custom Scrollbar --- */
+    .pages::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .pages::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .pages::-webkit-scrollbar-thumb {
+      background-color: #d1d5db;
+      border-radius: 10px;
+    }
+
+    .pages::-webkit-scrollbar-thumb:hover {
+      background-color: #a8b0bc;
+    }
+
+    /* --- General Focus Styles for Accessibility --- */
+    input:focus,
+    select:focus,
+    textarea:focus,
+    button:focus-visible {
+      outline: none;
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3) !important;
+    }
+
+    /* --- Sidebar --- */
+    .sidebar {
+      width: 260px;
+      background: var(--sidebar-bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      padding: 22px 16px;
+      gap: 14px;
+      transition: width 0.3s ease;
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .profile {
+      display: flex;
+      gap: 12px;
+      align-items: center
+    }
+
+    .profile img {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid rgba(255, 255, 255, 0.06);
+      transition: transform 0.3s ease;
+    }
+
+    /*.profile:hover img { transform: scale(1.08) rotate(6deg); }*/
+    .profile-info {
+      font-size: 14px
+    }
+
+    .profile-info .name {
+      font-weight: 600
+    }
+
+    .profile-info .meta {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 6px
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 0;
+      color: var(--text);
+      padding: 10px 12px;
+      text-align: left;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all .2s ease-in-out;
+      margin-bottom: 10px;
+    }
+
+    .nav-btn .icon {
+      width: 22px;
+      display: inline-block;
+      text-align: center;
+      transition: transform 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateX(4px);
+    }
+
+    .nav-btn.active {
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      box-shadow: 0 6px 18px rgba(92, 70, 255, 0.12);
+    }
+
+    .nav-btn.active .icon {
+      transform: scale(1.15);
+    }
+
+    .sidebar-bottom {
+      margin-top: auto
+    }
+
+    /* --- Main Content --- */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden
+    }
+
+    .topbar {
+      height: 64px;
+      background: var(--header-bg-light);
+      display: flex;
+      align-items: row;
+      justify-content: space-between;
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--border-light);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+      flex-shrink: 0;
+    }
+
+    .topbar {
+        height: auto;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+    body.dark .topbar,
+    body.dark .footer {
+      border-color: var(--border-dark);
+    }
+
+    .search input {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      width: 320px;
+      transition: all 0.2s ease;
+      padding: 14px 11px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      width: 326px;
+    }
+
+    .badge {
+      background-color: #e6f0ff;
+      color: var(--accent);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    .pages {
+      padding: 18px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      height: calc(100vh - 64px - 20px)
+    }
+
+    .page {
+      display: none
+    }
+
+    .page.active {
+      display: block;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* --- Typography & Layout Grids --- */
+    .page h2 {
+      margin-bottom: 20px;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-light);
+    }
+
+    .page-subtitle {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: 30px;
+    }
+
+    h3 {
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px
+    }
+
+    .grid-three {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px
+    }
+
+    /* --- Card Component --- */
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      transition: all 0.3s ease-in-out;
+      border: 1px solid var(--border-color);
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* --- Table Component --- */
+    .table-wrap {
+      overflow: auto
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      color: var(--text-dark)
+    }
+
+    table th,
+    table td {
+      padding: 12px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 14px
+    }
+
+    table th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    table tbody tr {
+      transition: background-color 0.2s ease;
+    }
+
+    table tbody tr:hover {
+      background-color: #f9fafb;
+    }
+
+    table .label {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .label-blue {
+      background-color: var(--accent);
+    }
+
+    .label-purple {
+      background-color: var(--accent-2);
+    }
+
+    .label-green {
+      background-color: var(--success);
+    }
+
+    /* --- Buttons & Forms --- */
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center
+    }
+
+    .filters select,
+    .filters input {
+      padding: 8px;
+      border-radius: 8px;
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-dark);
+      min-width: 120px;
+      transition: all 0.2s ease;
+    }
+
+    .btn {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 0;
+      cursor: pointer;
+      background: #f9fafb;
+      border: 1px solid var(--border-color);
+      color: var(--text-dark);
+      font-weight: 600;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+      filter: brightness(1);
+    }
+
+    .btn.primary {
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      box-shadow: 0 6px 14px rgba(92, 70, 255, 0.12);
+      color: white;
+      border: none;
+    }
+    #aiSuggestionBox .btn.primary{
+      margin-left: 45%;
+    }
+
+    .btn.success {
+      background: var(--success);
+      color: white;
+      border: none;
+    }
+
+    .btn.danger {
+      background: var(--danger);
+      color: white;
+      border: none;
+    }
+
+    .class_selector {
+      border-radius: 5px;
+      width: fit-content;
+      height: 35px;
+      background-color: #edfdff;
+      padding: 2px 5px;
+      margin-left: 10px;
+      border: none;
+      box-shadow: var(--shadow);
+
+      /*font-weight: 400;*/
+    }
+
+    .class_selector option {
+      background-color: white;
+    }
+
+    /* --- Misc Components --- */
+    .attendance-summary {
+      display: flex;
+      gap: 123px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 13px;
+    }
+
+    .circle-chart {
+      width: 140px;
+      height: 140px;
+    }
+
+    .bg {
+      fill: none;
+      stroke: var(--border-color);
+      stroke-width: 4
+    }
+
+    .arc {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 4;
+      stroke-linecap: round;
+      transform: rotate(-90deg);
+      transform-origin: center;
+      transition: stroke-dasharray 0.5s ease-out;
+    }
+
+    .chart-text {
+      fill: var(--text-dark);
+      font-size: 8px;
+      text-anchor: middle;
+      font-weight: 700
+    }
+
+    .chip {
+      background: #f9fafb;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 2px;
+    }
+
+    .list-compact {
+      list-style: none;
+      padding: 0;
+      margin: 0
+    }
+
+    .list-compact li {
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--border-color);
+      font-size: 14px
+    }
+
+    .uploaded-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 4px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    /* --- Personal Goals Styles --- */
+    .goal-item {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 10px;
+      border-left: 4px solid var(--muted);
+      transition: all 0.3s ease;
+      border: 1px solid var(--border-color);
+    }
+
+    .goal-item:hover {
+      transform: translateX(5px);
+      box-shadow: var(--shadow);
+      border-color: var(--accent);
+    }
+
+    .goal-item.completed {
+      border-left-color: var(--success);
+      background: rgba(52, 211, 153, 0.05);
+    }
+
+    .goal-item.completed .goal-title {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    .goal-item.in-progress {
+      border-left-color: var(--accent);
+    }
+
+    .goal-item.overdue {
+      border-left-color: var(--danger);
+      background: rgba(251, 113, 133, 0.05);
+    }
+
+    .goal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .goal-title {
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+
+    .goal-meta {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .goal-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    /* --- NEW: Free Lectures Section --- */
+    .lecture-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .lecture-card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      background-color: #fcfdff;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .lecture-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow);
+    }
+
+    .lecture-thumbnail {
+      height: 140px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lecture-thumbnail::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .lecture-card:hover .lecture-thumbnail::before {
+      opacity: 1;
+    }
+
+    .play-icon {
+      width: 48px;
+      height: 48px;
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: var(--accent);
+      transform: scale(0.8);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .lecture-card:hover .play-icon {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    .lecture-content {
+      padding: 12px;
+    }
+
+    .lecture-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-dark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lecture-instructor {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* --- IDEAL HOUR PAGE STYLES --- */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-card .value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary-accent);
+    }
+
+    .stat-card .value.dim {
+      color: var(--text-dark);
+    }
+
+    .stat-card .label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .timeslot-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .timeslot-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .timeslot-item:hover {
+      border-color: var(--primary-accent);
+      box-shadow: var(--shadow);
+      transform: translateY(-2px);
+    }
+
+    .timeslot-item.current {
+      border-color: var(--primary-accent);
+      background-color: #faf5ff;
+    }
+
+    .timeslot-info .time {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .timeslot-info .duration {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .timeslot-tag {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 99px;
+      color: white;
+    }
+
+    .tag-current {
+      background: var(--gradient-primary);
+    }
+
+    .tag-upcoming {
+      background-color: var(--text-secondary);
+    }
+
+    .quick-tasks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .quick-task-card {
+      background-color: #f7f8fa;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .quick-task-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow);
+      border-color: var(--primary-accent);
+    }
+
+    .quick-task-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .quick-task-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background-color: #e9d8fd;
+      color: var(--primary-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .quick-task-duration {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 10px;
+      background-color: #e9d8fd;
+      color: var(--primary-accent);
+      border-radius: 99px;
+    }
+
+    .quick-task-title {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 2px;
+    }
+
+    .quick-task-category {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* --- GOALS PAGE STYLES --- */
+    .goals-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .goal-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+    }
+
+    .goal-item-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .goal-item-status-icon {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .status-in-progress {
+      background-color: var(--warning);
+    }
+
+    .status-completed {
+      background-color: var(--success);
+    }
+
+    .status-overdue {
+      background-color: var(--danger);
+    }
+
+    .goal-item-title {
+      font-weight: 600;
+    }
+
+    .goal-item-title.completed {
+      text-decoration: line-through;
+      color: var(--text-secondary);
+    }
+
+    .goal-item-deadline {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .goal-item-actions button {
+      font-size: 12px;
+      padding: 6px 10px;
+    }
+
+    /* --- NEW: Dashboard Widgets --- */
+    .deadline-item,
+    .announcement-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .deadline-item:last-child,
+    .announcement-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .deadline-date {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #f3f4f6;
+      border-radius: 8px;
+      font-weight: 600;
+      text-align: center;
+      width: 60px;
+      height: 60px;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .deadline-date span {
+      font-size: 24px;
+      display: block;
+      line-height: 1.1;
+      letter-spacing: -1px;
+    }
+
+    .deadline-info .subject {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .deadline-info .title {
+      font-weight: 600;
+    }
+
+    .deadline-due {
+      margin-left: auto;
+      text-align: right;
+      font-size: 14px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .deadline-item.urgent .deadline-date {
+      background-color: rgba(251, 113, 133, 0.1);
+      color: var(--danger);
+      border: 1px solid rgba(251, 113, 133, 0.2);
+    }
+
+    .deadline-item.warning .deadline-date {
+      background-color: rgba(245, 158, 11, 0.1);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .deadline-date span {
+      font-size: 24px;
+      display: block;
+      line-height: 1.1;
+      letter-spacing: -1px;
+    }
+
+    .announcement-icon {
+      width: 44px;
+      height: 44px;
+      background-color: #eef2ff;
+      color: #4338ca;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .announcement-info .sender {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .announcement-info .title {
+      font-weight: 600;
+    }
+
+
+    /* --- NEW: Attendance Bar Graph Styles --- */
+    .attendance-graph-list {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .subject-bar-item {
+      display: grid;
+      grid-template-columns: 180px 1fr auto;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .subject-bar-label {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-dark);
+      text-align: right;
+    }
+
+    .bar-wrapper {
+      width: 100%;
+      background-color: var(--border-color);
+      border-radius: 8px;
+      height: 28px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 8px 0 0 8px;
+      transition: width 0.8s ease-out;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding-left: 12px;
+      position: relative;
+    }
+
+    .bar-percentage {
+      font-size: 13px;
+      font-weight: 700;
+      color: white;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .bar-good {
+      background: linear-gradient(90deg, #34d399, #10b981);
+    }
+
+    .bar-low {
+      background: linear-gradient(90deg, #fb7185, #f43f5e);
+    }
+
+    .subject-bar-item:hover .bar-fill {
+      filter: brightness(1.1);
+    }
+
+    .attendance-status {
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+    }
+
+    .status-good {
+      background-color: rgba(52, 211, 153, 0.1);
+      color: #059669;
+    }
+
+    .status-low {
+      background-color: rgba(251, 113, 133, 0.1);
+      color: #e11d48;
+    }
+
+    /* --- Responsive Design --- */
+    @media (max-width:980px) {
+      .grid-two {
+        grid-template-columns: 1fr
+      }
+
+      .grid-three {
+        grid-template-columns: 1fr
+      }
+
+      .sidebar {
+        display: none
+      }
+
+      #app {
+        padding: 12px
+      }
+
+      .search input {
+        min-width: 140px
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      }
+
+      .subject-bar-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .subject-bar-label {
+        text-align: left;
+      }
+    }
+
+    .page-title {
+      background: -webkit-linear-gradient(45deg, #8b5cf6, #ec4899);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .xp-bar-bg {
+      background-color: #374151;
+    }
+
+    .xp-bar-fill {
+      background: linear-gradient(90deg, #a78bfa, #8b5cf6);
+      animation: pulse-xp 2s infinite;
+    }
+
+    @keyframes pulse-xp {
+
+      0%,
+      100% {
+        box-shadow: 0 0 8px rgba(139, 92, 246, 0.5);
+      }
+
+      50% {
+        box-shadow: 0 0 16px rgba(139, 92, 246, 0.8);
+      }
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #8b5cf6;
+      border: 2px solid #1f2937;
+    }
+    /* --- Profile & Settings Redesign Styles --- */
+    .profile-banner {
+      background: linear-gradient(120deg, rgba(124,58,237,0.15), rgba(96,165,250,0.15));
+      border-radius: 12px;
+      height: 120px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+    .avatar-wrap {
+      position: relative;
+      margin-top: -48px;
+      display: inline-block;
+    }
+    .avatar-wrap img {
+      width: 110px; height: 110px; border-radius: 16px; object-fit: cover;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+      border: 3px solid #fff;
+    }
+    .avatar-edit {
+      position: absolute; right: 6px; bottom: 6px;
+      background: var(--accent);
+      color: #fff; border-radius: 999px; width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; border: none; box-shadow: var(--shadow);
+    }
+    .form-grid {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;
+    }
+    .form-grid .full { grid-column: 1 / -1; }
+    .form-field label { color: var(--muted); font-size: 13px; display:block; margin-bottom:6px; }
+    .form-field input, .form-field textarea, .form-field select {
+      display:block; width:100%; padding:10px; border-radius:10px; border:1px solid var(--border-color);
+      background: #fff; color: var(--text-dark);
+    }
+    .settings-group { margin-bottom: 18px; }
+    .settings-group h4 { margin-bottom: 8px; }
+    /* Toggle switch */
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .2s; border-radius: 999px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .2s; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+    .switch input:checked + .slider { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+    .switch input:checked + .slider:before { transform: translateX(20px); }
+    .setting-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px dashed var(--border-color); }
+    .setting-row:last-child { border-bottom:none; }
+    /* Dark theme variable overrides */
+    body.dark { 
+      --bg: #0b0f1a;
+      --card-bg: rgba(16,24,40,0.95);
+      --text-dark: #e5e7eb;
+      --border-color: #1f2937;
+      --header-bg-light: #0f1720;
+    }
+    body.dark .card { background: var(--card-bg); border-color: var(--border-color); }
+    body.dark .page h2, body.dark .page h3, body.dark .page h4 { color: #f3f4f6; }
+    body.dark .form-field input, body.dark .form-field textarea, body.dark .form-field select { background:#0f172a; color:#e5e7eb; border-color:#1f2937; }
+  </style>
+  <script src="student_ai_suggestions.js"></script>
+</head>
+
+<body>
+  <div id="app">
+    <aside class="sidebar" aria-label="student sidebar">
+      <div class="profile">
+        <img id="profileAvatar" src="https://i.pravatar.cc/100?img=32" alt="avatar" />
+        <div class="profile-info">
+          <div class="name" id="studentName">Aditi Vishwakarma</div>
+          <div class="meta" id="studentRoll">Roll: STU-1025 • CSE-1A</div>
+        </div>
+      </div>
+
+      <nav class="nav" role="navigation">
+        <button class="nav-btn active" data-page="home"><span class="icon">🏠</span> Home</button>
+        <button class="nav-btn" data-page="today"><span class="icon">📅</span> Today's Schedule</button>
+        <button class="nav-btn" data-page="personal-goals"><span class="icon">🎯</span> Personal Goals</button>
+        <button class="nav-btn" data-page="personal-growth"><span class="icon">🚀</span> Personal Growth</button>
+        <button class="nav-btn" data-page="ideal-hour"><span class="icon">🕒</span> Free Hours</button>
+        <button class="nav-btn" data-page="notes"><span class="icon">📚</span> Notes</button>
+        <button class="nav-btn" data-page="exams"><span class="icon">📝</span> Exams</button>
+        <button class="nav-btn" data-page="profile"><span class="icon">👤</span> Profile</button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <button id="settingsBtn" class="nav-btn" data-page="settings"><span class="icon">⚙️</span> Settings</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <strong id="viewTitle" style="font-size: 18px;">Dashboard</strong>
+          <div style="font-size: 14px; color: var(--muted);">Welcome, Student</div>
+        </div>
+        <div class="top-actions">
+            <div class="badge" id="roleBadge">Student</div>
+            <script>
+            // Map page keys to topbar titles
+            const pageTitles = {
+              home: "Dashboard",
+              today: "Today's Schedule",
+              "personal-goals": "Personal Goals",
+              "personal-growth": "Personal Growth",
+              "ideal-hour": "Free Hours",
+              notes: "Notes & Resources",
+              exams: "Upcoming Exams",
+              profile: "Profile",
+              settings: "Settings"
+            };
+            // Update topbar title on navigation
+            function updateTopbarTitle(page) {
+              const title = pageTitles[page] || "Dashboard";
+              document.getElementById("viewTitle").textContent = title;
+            }
+            // Patch navigation to update title
+            document.querySelectorAll(".nav-btn").forEach(btn => {
+              btn.addEventListener("click", () => {
+              const page = btn.getAttribute("data-page");
+              updateTopbarTitle(page);
+              });
+            });
+            // Set initial title
+            updateTopbarTitle("home");
+            </script>
+        </div>
+      </header>
+
+      <section class="pages">
+
+        <section id="page-home" class="page active">
+          <div class="grid-two">
+            <div class="card">
+              <h3>Today's Schedule</h3>
+              <div id="todaySchedulePreview" class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Time</th>
+                      <th>Subject</th>
+                      <th>Type</th>
+                      <th>Room</th>
+                    </tr>
+                  </thead>
+                  <tbody id="todayPreviewTbody"></tbody>
+                </table>
+                <button id="markAttendanceBtn" class="btn primary" style="margin-top:12px;">Mark Attendance</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div style="display:flex;flex-direction:row;gap: 15px;justify-content: space-around;">
+                <h3>Attendance Summary</h3>
+                <div>
+                  <select id="homeSubjectSelect" name="class" class="class_selector"></select>
+                </div>
+              </div>
+              <div class="attendance-summary">
+                <div class="circle-chart" title="Attendance percentage">
+                  <svg viewBox="0 0 36 36">
+                    <path class="bg"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path id="presentArc" class="arc" stroke-dasharray="0,100"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <text x="18" y="20.5" class="chart-text" id="presentText">0%</text>
+                  </svg>
+                </div>
+
+                <div class="leave-chips">
+                  <div class="chip">Present: <strong id="mlCount">0</strong></div>
+                  <div class="chip">Absent: <strong id="clCount">0</strong></div>
+                  <div class="chip">Total Attendance: <strong id="totalCount">0</strong></div>
+                </div>
+              </div>
+
+              <div style="margin-top:22px;margin-left:33px;">
+                <h4 style="margin:8px 0;color:var(--muted);">Upcoming Holidays</h4>
+                <ul id="holidaysList" class="list-compact"></ul>
+              </div>
+            </div>
+          </div>
+          <div class="grid-two">
+            <div class="card">
+              <h3>Upcoming Deadlines</h3>
+              <div id="deadlinesList"></div>
+            </div>
+            <div class="card">
+              <h3>What's New</h3>
+              <div id="announcementsList"></div>
+            </div>
+          </div>
+
+          
+        </section>
+
+        <section id="page-today" class="page">
+          <h2>Time Table</h2>
+          <div class="card">
+            <div class="row controls">
+              <div class="small">Date: <strong id="todayDate"></strong></div>
+            </div>
+            <div class="table-wrap">
+              <table class="table schedule">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Subject</th>
+                    <th>Type</th>
+                    <th>Room</th>
+                  </tr>
+                </thead>
+                <tbody id="scheduleTbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+        <section id="page-personal-goals" class="page">
+          <h2>Personal Goals</h2>
+          <div class="grid-two">
+            <div class="card">
+              <h3>Goals Overview</h3>
+              <div class="grid-three" style="gap:12px;margin:16px 0">
+                <div style="text-align:center">
+                  <div style="font-size:24px;font-weight:700;color:var(--success)" id="completedGoals">0</div>
+                  <div style="color:var(--muted);font-size:12px">Completed</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-size:24px;font-weight:700;color:var(--accent)" id="activeGoals">0</div>
+                  <div style="color:var(--muted);font-size:12px">Active</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-size:24px;font-weight:700;color:var(--danger)" id="overdueGoals">0</div>
+                  <div style="color:var(--muted);font-size:12px">Overdue</div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <h3 style="margin: 20px;">Quick Add Goal</h3>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <input id="goalTitle" placeholder="Goal title"
+                  style="padding:10px;border-radius:8px;border:1px solid var(--border-color)" />
+                <textarea id="goalDescription" placeholder="Goal description" rows="2"
+                  style="padding:10px;border-radius:8px;border:1px solid var(--border-color);resize:vertical;"></textarea>
+                <input id="goalDeadline" type="date"
+                  style="padding:10px;border-radius:8px;border:1px solid var(--border-color)" />
+                <button id="addGoalBtn" class="btn primary">Add Goal</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:16px">
+              <h3>My Goals</h3>
+              <div class="row">
+                <select id="goalFilter" style="padding:8px;border-radius:8px;border:1px solid var(--border-color)">
+                  <option value="all">All Goals</option>
+                  <option value="in-progress">Active</option>
+                  <option value="completed">Completed</option>
+                  <option value="overdue">Overdue</option>
+                </select>
+              </div>
+            </div>
+            <div id="goalsList" class="goals-list"></div>
+          </div>
+        </section>
+        <section id="page-personal-growth" class="page max-w-7xl mx-auto">
+          <h2>Personal Growth</h2>
+          <p class="text-lg text-gray-400 mt-2">Track your progress, skills, and achievements over time.</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+
+            <div class="card md:col-span-2 lg:col-span-1">
+              <h3 class="text-xl font-bold text-black">XP & Level</h3>
+              <div class="mt-4">
+                <div class="flex justify-between font-semibold text-black">
+                  <span class="text-black">Level <span id="growthLevel" class="text-fuchsia-400">5</span></span>
+                  <span id="growthXP">350 / 500 XP</span>
+                </div>
+                <div class="xp-bar-bg h-4 rounded-full mt-2 overflow-hidden">
+                  <div id="xpBar" class="xp-bar-fill h-full rounded-full" style="width:70%"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3 class="text-xl font-bold text-black">Consistency Tracker</h3>
+              <ul class="list-none p-0 mt-3 space-y-2">
+                <li class="flex items-center">
+                  <span class="text-xl mr-3">🔥</span> Current Streak: <strong class="ml-auto text-green-400">7
+                    days</strong>
+                </li>
+                <li class="flex items-center">
+                  <span class="text-xl mr-3">✅</span> Completed: <strong class="ml-auto text-blue-400">12</strong>
+                </li>
+                <li class="flex items-center">
+                  <span class="text-xl mr-3">⚠️</span> Overdue: <strong class="ml-auto text-yellow-400">3</strong>
+                </li>
+              </ul>
+            </div>
+
+            <div class="card">
+              <h3 class="text-xl font-bold text-black">Growth Timeline</h3>
+              <ul class="list-none p-0 mt-4 space-y-3">
+                <li class="relative pl-4 border-l-2 border-gray-700 timeline-item">
+                  <span class="font-semibold text-violet-400">2025-09-10</span> — ⚡ Reached Level 5
+                </li>
+                <li class="relative pl-4 border-l-2 border-gray-700 timeline-item">
+                  <span class="font-semibold text-violet-400">2025-09-07</span> — 🏆 "Data Structures Guru"
+                </li>
+                <li class="relative pl-4 border-l-2 border-gray-700 timeline-item">
+                  <span class="font-semibold text-violet-400">2025-09-05</span> — 📌 Completed first OS Lab
+                </li>
+              </ul>
+            </div>
+
+            <div class="card lg:col-span-2">
+              <h3 class="text-xl font-bold text-black">Skill Strengths</h3>
+              <div class="mt-4 h-64 md:h-80">
+                <canvas id="skillsRadar" class="text-black"></canvas>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3 class="text-xl font-bold text-black">Badges Earned</h3>
+              <div id="badgesGrid" class="grid grid-cols-3 gap-4 mt-4 text-center"></div>
+            </div>
+
+            <div class="card md:col-span-2">
+              <h3 class="text-xl font-bold text-black">Assignment Analytics</h3>
+              <div class="mt-4 h-64">
+                <canvas id="assignmentChart"></canvas>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3 class="text-xl font-bold text-black">Weekly Activity</h3>
+              <div class="mt-4 h-64">
+                <canvas id="consistencyChart"></canvas>
+              </div>
+            </div>
+
+          </div>
+        </section>
+        <section id="page-ideal-hour" class="page">
+          <div style="margin-bottom:10px;">
+            <h2>Free Hours</h2>
+            <p class="page-subtitle">Turn your free periods into productive learning sessions.</p>
+          </div>
+          <div class="card">
+            <h3>Today's Progress</h3>
+            <div id="idealHourStats" class="stats-grid"></div>
+          </div>
+          <div class="grid-two">
+            <div class="card">
+              <h3>Free Periods Today</h3>
+              <div id="freePeriodsList" class="timeslot-list"></div>
+            </div>
+            <div class="card" id="teacherTaskCard">
+            </div>
+          </div>
+          <div class="card">
+            <h3>Quick Learning Tasks</h3>
+            <br />
+            <p class="page-subtitle" style="margin-bottom: 16px; margin-top: -12px;">Pre-designed activities to boost
+              your productivity</p>
+            <div id="quickTasksGrid" class="quick-tasks-grid"></div>
+          </div>
+        </section>
+
+        <section id="page-attendance" class="page">
+          <h2>Your Attendance</h2>
+          <div class="card">
+            <div class="row filters" style="align-items:center; flex-wrap: wrap;">
+              <select id="attendanceFilterSubject">
+                <option value="All">All Subjects</option>
+              </select>
+              <div style="flex:1"></div>
+              <button id="downloadReport" class="btn">Download Report</button>
+            </div>
+            <div id="attendanceGraphContainer" style="margin-top:20px;">
+            </div>
+          </div>
+        </section>
+
+        <section id="page-notes" class="page">
+          <h2>Notes & Resources</h2>
+          <div class="card">
+            <div class="row filters" style="flex-wrap: wrap;">
+              <select id="notesFilterSubject" style="min-width:160px">
+                <option value="All">All Subjects</option>
+              </select>
+              <div style="flex:1"></div>
+              <input id="notesSearch" placeholder="Search notes..."
+                style="padding:8px;border-radius:8px;border:1px solid var(--border-color)" />
+            </div>
+            <div style="margin-top:12px" id="notesList" class="uploaded-list">
+              <ul></ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="page-exams" class="page">
+          <h2>Upcoming Exams</h2>
+          <div class="card">
+            <h3>Next Exam</h3>
+            <div style="display:flex;gap:16px;align-items:center; flex-wrap:wrap;">
+              <div style="flex:1; min-width: 250px;">
+                <div style="font-size:18px;font-weight:600" id="nextExamSubject"></div>
+                <div style="color:var(--muted);margin-top:6px">Date: <strong id="nextExamDate"></strong> • Time: <span
+                    id="nextExamTime"></span></div>
+                <div style="margin-top:8px;color:var(--muted)">Syllabus: <span id="nextExamSyllabus"></span></div>
+              </div>
+              <div>
+                <button id="examReminderBtn" class="btn primary">Set Reminder</button>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:12px">
+            <h4>All exams</h4>
+            <div id="examsList" class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Subject</th>
+                    <th>Type</th>
+                    <th>Reminder</th>
+                  </tr>
+                </thead>
+                <tbody id="allExamsTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="page-profile" class="page">
+          <h2>Profile</h2>
+          <div class="card">
+            <div class="profile-banner"></div>
+            <div style="display:flex; align-items:flex-end; gap:16px; padding: 0 12px;">
+              <div class="avatar-wrap">
+                <img id="profileAvatarLarge" src="https://i.pravatar.cc/100?img=32" alt="avatar" />
+                <button class="avatar-edit" title="Change Photo" onclick="document.getElementById('profileAvatarInput').click()">✎</button>
+                <input id="profileAvatarInput" type="file" accept="image/*" hidden />
+              </div>
+              <div style="margin-top: 8px;">
+                <div id="profileDisplayName" style="font-weight:700; font-size:18px;">Aditi Vishwakarma</div>
+                <div style="color:var(--muted); font-size:13px;" id="profileDisplayRoll">Roll: STU-1025 • CSE-1A</div>
+              </div>
+            </div>
+            <div style="margin-top:16px" class="form-grid">
+              <div class="form-field">
+                <label>First Name</label>
+                <input id="profileFirstName" type="text" value="Aditi" />
+              </div>
+              <div class="form-field">
+                <label>Last Name</label>
+                <input id="profileLastName" type="text" value="Vishwakarma" />
+              </div>
+              <div class="form-field">
+                <label>Preferred Name</label>
+                <input id="profilePreferredName" type="text" placeholder="Optional" />
+              </div>
+              <div class="form-field">
+                <label>Contact Email</label>
+                <input id="profileEmail" type="email" placeholder="you@example.com" />
+              </div>
+              <div class="form-field">
+                <label>Phone</label>
+                <input id="profilePhone" type="tel" placeholder="9876543210" />
+              </div>
+              <div class="form-field full">
+                <label>Bio</label>
+                <textarea id="profileBio" rows="3" placeholder="A short description about you..."></textarea>
+              </div>
+              <div class="form-field full">
+                <label>Website / Portfolio</label>
+                <input id="profileWebsite" type="url" placeholder="https://" />
+              </div>
+              <div class="form-field full">
+                <label>Roll / Class</label>
+                <input id="profileRollClass" type="text" value="STU-1025 — CSE-1A" readonly />
+              </div>
+            </div>
+            <div class="row" style="gap:10px; margin-top:14px;">
+              <button id="profileSaveBtn" class="btn primary">Save Changes</button>
+              <button id="profileCancelBtn" class="btn">Cancel</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="page-settings" class="page">
+          <h2>Settings</h2>
+          <div class="card">
+            <div class="settings-group">
+              <h4>Appearance</h4>
+              <div class="setting-row">
+                <div>
+                  <div style="font-weight:600">Theme</div>
+                  <div class="page-subtitle" style="margin:0">Choose light, dark, or follow system</div>
+                </div>
+                <div class="form-field" style="min-width:180px">
+                  <select id="settingTheme">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                    <option value="system">System</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="settings-group">
+              <h4>Notifications</h4>
+              <div class="setting-row">
+                <span>Email notifications</span>
+                <label class="switch"><input id="settingNotifEmail" type="checkbox" checked><span class="slider"></span></label>
+              </div>
+              <div class="setting-row">
+                <span>Push notifications</span>
+                <label class="switch"><input id="settingNotifPush" type="checkbox" checked><span class="slider"></span></label>
+              </div>
+              <div class="setting-row">
+                <span>SMS notifications</span>
+                <label class="switch"><input id="settingNotifSms" type="checkbox"><span class="slider"></span></label>
+              </div>
+            </div>
+            <div class="settings-group">
+              <h4>Study reminders</h4>
+              <div class="setting-row">
+                <span>Reminder lead time</span>
+                <div class="form-field" style="min-width:180px">
+                  <select id="settingReminderLead">
+                    <option value="10">10 minutes</option>
+                    <option value="15">15 minutes</option>
+                    <option value="30" selected>30 minutes</option>
+                    <option value="60">60 minutes</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="settings-group">
+              <h4>Privacy</h4>
+              <div class="setting-row">
+                <span>Show my email to classmates</span>
+                <label class="switch"><input id="settingShowEmail" type="checkbox" checked><span class="slider"></span></label>
+              </div>
+            </div>
+            <div class="settings-group">
+              <h4>Data</h4>
+              <div class="row" style="gap:10px">
+                <button class="btn" id="settingExportBtn">Export my data</button>
+                <button class="btn danger" id="settingResetBtn">Reset settings</button>
+                <div style="flex:1"></div>
+                <button class="btn primary" id="settingSaveBtn">Save Settings</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // --- NAVIGATION SCRIPT ---
+    function goTo(page) {
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+
+      const pageElement = document.getElementById("page-" + page);
+      if (pageElement) pageElement.classList.add("active");
+
+      const currentButton = document.querySelector(`.nav-btn[data-page="${page}"]`);
+      if (currentButton) currentButton.classList.add("active");
+    }
+
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const page = btn.getAttribute("data-page");
+        goTo(page);
+      });
+    });
+  </script>
+
+  <script>
+    // --- DUMMY DATA INITIALIZATION SCRIPT ---
+  document.addEventListener("DOMContentLoaded", function () {
+      // --- DUMMY DATA ---
+      const subjects = ["Data Structures", "Algorithms", "Database Management", "Operating Systems", "Computer Networks"];
+      const todaySchedule = [
+        { time: "09:00 - 10:00", subject: "Data Structures", topic: "Trees & Graphs", type: "Lecture", Room: "C-301" },
+        { time: "10:00 - 11:00", subject: "Algorithms", topic: "Sorting Algorithms", type: "Lecture", Room: "C-302" },
+        { time: "11:00 - 12:00", subject: "Database Management", topic: "SQL Joins", type: "Lecture", Room: "C-205" },
+        { time: "12:00 - 13:00", subject: "Lunch Break", topic: "-", type: "Break", Room: "-" },
+        { time: "13:00 - 15:00", subject: "Data Structures", topic: "Lab Session 5", type: "Lab", Room: "L-101" },
+      ];
+      const attendanceData = [
+        { subject: "Data Structures", total: 30, attended: 28 },
+        { subject: "Algorithms", total: 28, attended: 25 },
+        { subject: "Database Management", total: 32, attended: 30 },
+        { subject: "Operating Systems", total: 25, attended: 15 },
+        { subject: "Computer Networks", total: 29, attended: 28 },
+      ];
+      const holidays = [{ date: "Oct 2, 2025", name: "Gandhi Jayanti" }, { date: "Oct 21, 2025", name: "Diwali" }];
+      const deadlines = [
+        { title: "Assignment #3 Submission", subject: "Data Structures", dueDate: new Date("2025-09-12") },
+        { title: "Quiz on Sorting Algorithms", subject: "Algorithms", dueDate: new Date("2025-09-14") },
+        { title: "Lab Report 5", subject: "Operating Systems", dueDate: new Date("2025-09-18") },
+        { title: "Project Proposal Draft", subject: "Database Management", dueDate: new Date("2025-09-20") },
+      ];
+
+      const announcements = [
+        { title: "Mid-term exam schedule is out.", sender: "Admin Office", time: "1d ago" },
+        { title: "Extra class for Network Protocols on Friday.", sender: "Prof. Verma", time: "2d ago" },
+        { title: "Assignment #2 grades have been published.", sender: "Prof. Gupta", time: "4d ago" },
+      ];
+      const goals = [
+        { id: 1, title: "Complete DSA Assignment 3", description: "Implement Binary Search Tree operations.", deadline: "2025-09-15", status: "in-progress" },
+        { id: 2, title: "Revise OS Scheduling Algorithms", description: "FCFS, SJF, Priority, Round Robin.", deadline: "2025-09-12", status: "in-progress" },
+        { id: 3, title: "Start project proposal for DBMS", description: "Brainstorm ideas and create an outline.", deadline: "2025-09-20", status: "in-progress" },
+        { id: 4, title: "Solve 5 LeetCode problems", description: "Focus on medium difficulty array problems.", deadline: "2025-09-10", status: "completed" },
+        { id: 5, title: "Read Chapter 1 of Networking book", description: "Introduction to Computer Networks.", deadline: "2025-09-08", status: "overdue" },
+      ];
+      const notes = [
+        { id: 1, subject: "Data Structures", title: "Lecture 5 - Stacks & Queues.pdf", uploader: "Prof. Sharma", date: "2025-09-05" },
+        { id: 2, subject: "Operating Systems", title: "Unit 2 - Process Management.pdf", uploader: "Prof. Gupta", date: "2025-09-08" },
+        { id: 3, subject: "Database Management", title: "ER Diagrams Explained.pdf", uploader: "Prof. Verma", date: "2025-09-02" },
+      ];
+      const exams = [
+        { date: "2025-09-22", subject: "Data Structures", type: "Mid-Term Exam", time: "10:00 AM", syllabus: "Unit 1 & 2" },
+        { date: "2025-09-24", subject: "Algorithms", type: "Mid-Term Exam", time: "10:00 AM", syllabus: "Unit 1 & 2" },
+        { date: "2025-09-26", subject: "Operating Systems", type: "Mid-Term Exam", time: "01:00 PM", syllabus: "Unit 1 & 2" },
+      ];
+      const teacherTasks = [
+        {
+          subject: "Data Structures",
+          title: "Practice Question Set #3",
+          description: "Solve the first 5 problems related to Linked Lists to prepare for the upcoming mid-term exam.",
+          teacher: "Prof. Sharma",
+          dueDate: "End of Day"
+        },
+        {
+          subject: "Algorithms",
+          title: "Review Big O Notation",
+          description: "Watch the recommended video on Big O notation and summarize the key concepts for different data structures.",
+          teacher: "Prof. Gupta",
+          dueDate: "Tomorrow"
+        },
+        {
+          subject: "Computer Networks",
+          title: "Prepare for Lab Quiz",
+          description: "Go through the TCP/IP model slides and be prepared for a short quiz at the beginning of the next lab session.",
+          teacher: "Prof. Verma",
+          dueDate: "Next Lab"
+        }
+      ];
+      function formatDueDate(dueDate) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const due = new Date(dueDate);
+        due.setHours(0, 0, 0, 0);
+        const diffTime = due - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) return { text: "Overdue", class: 'urgent' };
+        if (diffDays === 0) return { text: "Due Today", class: 'urgent' };
+        if (diffDays === 1) return { text: "Due Tomorrow", class: 'warning' };
+        return { text: `In ${diffDays} days`, class: '' };
+      }
+      function initHome() {
+        document.getElementById('todayPreviewTbody').innerHTML = todaySchedule.slice(0, 4).map(item =>
+          `<tr>
+        <td>${item.time}</td>
+        <td>${item.subject}</td>
+        <td><span class="label ${item.type === 'Lecture' ? 'label-blue' : 'label-purple'}">${item.type}</span></td>
+        <td>${item.Room || '-'}</td>
+    </tr>`
+        ).join('');
+        // Populate subject selector (Overall + subjects)
+        const homeSelect = document.getElementById('homeSubjectSelect');
+        if (homeSelect && homeSelect.options.length === 0) {
+          const options = ['Overall', ...subjects];
+          homeSelect.innerHTML = options.map(s => `<option value="${s}">${s}</option>`).join('');
+        }
+
+        // Helper to update ring and chips by subject or overall
+        function updateHomeAttendanceSummary(selected) {
+          const presentArc = document.getElementById('presentArc');
+          const presentText = document.getElementById('presentText');
+          const mlCount = document.getElementById('mlCount');
+          const clCount = document.getElementById('clCount');
+          const totalCount = document.getElementById('totalCount');
+
+          let attended = 0, total = 0;
+          if (!selected || selected === 'Overall') {
+            attended = attendanceData.reduce((sum, s) => sum + s.attended, 0);
+            total = attendanceData.reduce((sum, s) => sum + s.total, 0);
+          } else {
+            const row = attendanceData.find(r => r.subject === selected);
+            if (row) {
+              attended = row.attended;
+              total = row.total;
+            }
+          }
+          const percentage = total > 0 ? Math.round((attended / total) * 100) : 0;
+          if (presentArc) presentArc.style.strokeDasharray = `${percentage}, 100`;
+          if (presentText) presentText.textContent = `${percentage}%`;
+          if (mlCount) mlCount.textContent = String(attended);
+          if (clCount) clCount.textContent = String(Math.max(total - attended, 0));
+          if (totalCount) totalCount.textContent = String(total);
+        }
+
+        // First render using current or default value
+        updateHomeAttendanceSummary(homeSelect ? homeSelect.value : 'Overall');
+        // Wire up change handler
+        if (homeSelect) {
+          homeSelect.addEventListener('change', (e) => {
+            updateHomeAttendanceSummary(e.target.value);
+          });
+        }
+        document.getElementById('holidaysList').innerHTML = holidays.map(h => `<li>${h.name} - <strong>${h.date}</strong></li>`).join('');
+        // NEW: Deadlines
+        document.getElementById('deadlinesList').innerHTML = deadlines.map(item => {
+          const dueInfo = formatDueDate(item.dueDate);
+          const date = new Date(item.dueDate);
+          return `
+            <div class="deadline-item ${dueInfo.class}">
+                <div class="deadline-date">
+                    <span>${date.getDate()}</span>
+                    ${date.toLocaleString('default', { month: 'short' })}
+                </div>
+                <div class="deadline-info">
+                    <div class="subject">${item.subject}</div>
+                    <div class="title">${item.title}</div>
+                </div>
+                <div class="deadline-due"><strong>${dueInfo.text}</strong></div>
+            </div>
+            `;
+        }).join('');
+        document.getElementById('announcementsList').innerHTML = announcements.map(item => `
+            <div class="announcement-item">
+                <div class="announcement-icon">📢</div>
+                <div class="announcement-info">
+                    <div class="title">${item.title}</div>
+                    <div class="sender">by ${item.sender} • ${item.time}</div>
+                </div>
+            </div>
+        `).join('');
+
+      }
+
+      function initIdealHour() {
+        document.getElementById('idealHourStats').innerHTML = [
+          { value: "3", label: "Tasks Completed", class: "dim" },
+          { value: "2", label: "Active Tasks", class: "dim" },
+          { value: "60%", label: "Completion Rate", class: "" },
+          { value: "2.5h", label: "Time Invested", class: "" }
+        ].map(stat => `<div class="stat-card"><div class="value ${stat.class}">${stat.value}</div><div class="label">${stat.label}</div></div>`).join('');
+
+        document.getElementById('freePeriodsList').innerHTML = [
+          { time: "12:30 - 13:30", duration: "60 minutes available", status: "Current" },
+          { time: "15:45 - 16:45", duration: "60 minutes available", status: "Upcoming" },
+          { time: "17:00 - 18:00", duration: "60 minutes available", status: "Upcoming" }
+        ].map(p => `<div class="timeslot-item ${p.status === 'Current' ? 'current' : ''}"><div class="timeslot-info"><div class="time">${p.time}</div><div class="duration">${p.duration}</div></div><div class="timeslot-tag ${p.status === 'Current' ? 'tag-current' : 'tag-upcoming'}">${p.status}</div></div>`).join('');
+
+        document.getElementById('quickTasksGrid').innerHTML = [
+          { icon: "✍️", duration: "50min", title: "Solve 5 practice problems", category: "Problem Solving" },
+          { icon: "📖", duration: "45min", title: "Revise yesterday's notes", category: "Revision" },
+          { icon: "💻", duration: "60min", title: "Practice coding exercises", category: "Programming" },
+          { icon: "📚", duration: "50min", title: "Read textbook chapter", category: "Reading" },
+          { icon: "📑", duration: "60min", title: "Complete assignment work", category: "Assignments" },
+          { icon: "📼", duration: "40min", title: "Review lecture recordings", category: "Revision" }
+        ].map(t => `<div class="quick-task-card"><div class="quick-task-header"><div class="quick-task-icon">${t.icon}</div><span class="quick-task-duration">${t.duration}</span></div><div><div class="quick-task-title">${t.title}</div><div class="quick-task-category">${t.category}</div></div></div>`).join('');
+
+        const taskCard = document.getElementById('teacherTaskCard');
+        taskCard.innerHTML = `<h3>Reccomended Questions</h3>
+            <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 12px;">
+              ${teacherTasks.map(task => `
+                <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                  <div style="font-size: 13px; color: var(--muted);">
+                      ${task.subject} • <strong>Due: ${task.dueDate}</strong>
+                  </div>
+                  <h4 style="font-weight: 600; font-size: 15px; margin: 4px 0;">${task.title}</h4>
+                  <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 10px;">
+                      ${task.description}
+                  </p>
+                  <div class="row" style="justify-content: space-between; align-items: center;">
+                      <span style="font-size: 13px;">From: <strong>${task.teacher}</strong></span>
+                      <button class="btn">View Details</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+      }
+
+      function applyRoomOverrides() {
+        try {
+          const map = JSON.parse(localStorage.getItem('roomOverrides') || '{}');
+          // Apply to home/today schedules by subject match
+          const tableBodies = [document.getElementById('todayPreviewTbody'), document.getElementById('scheduleTbody')].filter(Boolean);
+          tableBodies.forEach(tbody => {
+            if (!tbody) return;
+            Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+              const tds = tr.querySelectorAll('td');
+              const subj = tds[1]?.textContent?.trim();
+              if (subj && map[subj] && tds[3]) {
+                tds[3].textContent = map[subj].room;
+              }
+            });
+          });
+        } catch(e) { /* ignore */ }
+      }
+
+      function initToday() {
+        /*document.getElementById('scheduleTbody').innerHTML = todaySchedule.map(item => `<tr style="${item.type === 'Break' ? 'color: var(--muted);' : ''}"><td>${item.time}</td><td>${item.subject}</td><td>${item.topic}</td><td><span class="label ${item.type === 'Lecture' ? 'label-blue' : (item.type === 'Lab' ? 'label-purple' : 'label-green')}">${item.type}</span></td></tr>`).join('');*/
+        document.getElementById('scheduleTbody').innerHTML = todaySchedule.slice(0, 4).map(item =>
+          `<tr>
+        <td>${item.time}</td>
+        <td>${item.subject}</td>
+        <td><span class="label ${item.type === 'Lecture' ? 'label-blue' : 'label-purple'}">${item.type}</span></td>
+        <td>${item.Room || '-'}</td>
+    </tr>`
+        ).join('');
+        document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        applyRoomOverrides();
+      }
+
+      function initAttendance() {
+        const container = document.getElementById('attendanceGraphContainer');
+        const graphHTML = attendanceData.map(item => {
+          const percentage = Math.round((item.attended / item.total) * 100);
+          const status = percentage >= 75 ? 'Good' : 'Low';
+
+          return `
+            <div class="subject-bar-item" title="Attended: ${item.attended} / Total: ${item.total}">
+              <div class="subject-bar-label">${item.subject}</div>
+              <div class="bar-wrapper">
+                  <div class="bar-fill bar-${status.toLowerCase()}" style="width: ${percentage}%;">
+                      <span class="bar-percentage">${percentage}%</span>
+                  </div>
+              </div>
+              <div class="attendance-status status-${status.toLowerCase()}">${status}</div>
+            </div>
+          `;
+        }).join('');
+
+        container.innerHTML = `<div class="attendance-graph-list">${graphHTML}</div>`;
+        document.getElementById('attendanceFilterSubject').innerHTML += subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+      }
+
+      function initGoals() {
+        // --- GOALS LOGIC ---
+        // Load from localStorage if available
+        let storedGoals = localStorage.getItem('studentGoals');
+        let goalList = storedGoals ? JSON.parse(storedGoals) : goals.slice();
+
+        // Helper: update status based on deadline
+        function updateGoalStatuses() {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          goalList.forEach(g => {
+            if (g.status === 'completed') return;
+            const deadline = new Date(g.deadline);
+            deadline.setHours(0, 0, 0, 0);
+            if (deadline < today) {
+              g.status = 'overdue';
+            } else {
+              g.status = 'in-progress';
+            }
+          });
+        }
+        updateGoalStatuses();
+
+        // Helper: sort by deadline (active/overdue first)
+        function getSortedGoals(filter) {
+          let filtered = goalList;
+          if (filter === 'in-progress') filtered = goalList.filter(g => g.status === 'in-progress');
+          else if (filter === 'completed') filtered = goalList.filter(g => g.status === 'completed');
+          else if (filter === 'overdue') filtered = goalList.filter(g => g.status === 'overdue');
+          // Show active/overdue first, then completed
+          return filtered.sort((a, b) => {
+            if (a.status !== b.status) {
+              if (a.status === 'overdue') return -1;
+              if (b.status === 'overdue') return 1;
+              if (a.status === 'in-progress') return -1;
+              if (b.status === 'in-progress') return 1;
+            }
+            return new Date(a.deadline) - new Date(b.deadline);
+          });
+        }
+
+        // Render goals
+        function renderGoals() {
+          updateGoalStatuses();
+          const filter = document.getElementById('goalFilter').value;
+          const sortedGoals = getSortedGoals(filter === 'all' ? undefined : filter);
+          document.getElementById('goalsList').innerHTML = sortedGoals.map(g => `
+            <div class="goal-item ${g.status}" data-id="${g.id}">
+              <div class="goal-header">
+                <div class="goal-title${g.status === 'completed' ? ' completed' : ''}">${g.title}</div>
+                <div class="goal-meta">Due: ${g.deadline}</div>
+              </div>
+              <div class="goal-meta">${g.description}</div>
+              <div class="goal-actions">
+                ${g.status !== 'completed' ? `<button class="btn success" style="padding: 4px 8px; font-size: 12px;" data-action="done">Mark as Done</button>` : ''}
+                <button class="btn danger" style="padding: 4px 8px; font-size: 12px;" data-action="delete">Delete</button>
+              </div>
+            </div>
+          `).join('');
+          document.getElementById('completedGoals').textContent = goalList.filter(g => g.status === 'completed').length;
+          document.getElementById('activeGoals').textContent = goalList.filter(g => g.status === 'in-progress').length;
+          document.getElementById('overdueGoals').textContent = goalList.filter(g => g.status === 'overdue').length;
+        }
+        renderGoals();
+
+        // Add goal
+        document.getElementById('addGoalBtn').onclick = function () {
+          const title = document.getElementById('goalTitle').value.trim();
+          const description = document.getElementById('goalDescription').value.trim();
+          const deadline = document.getElementById('goalDeadline').value;
+          if (!title || !deadline) {
+            alert('Please enter a title and deadline.');
+            return;
+          }
+          const newGoal = {
+            id: Date.now(),
+            title,
+            description,
+            deadline,
+            status: 'in-progress'
+          };
+          goalList.push(newGoal);
+          localStorage.setItem('studentGoals', JSON.stringify(goalList));
+          document.getElementById('goalTitle').value = '';
+          document.getElementById('goalDescription').value = '';
+          document.getElementById('goalDeadline').value = '';
+          renderGoals();
+        };
+
+        // Mark done/delete
+        document.getElementById('goalsList').onclick = function (e) {
+          const btn = e.target.closest('button');
+          if (!btn) return;
+          const action = btn.getAttribute('data-action');
+          const goalDiv = btn.closest('.goal-item');
+          const goalId = Number(goalDiv.getAttribute('data-id'));
+          const idx = goalList.findIndex(g => g.id === goalId);
+          if (action === 'done') {
+            goalList[idx].status = 'completed';
+            localStorage.setItem('studentGoals', JSON.stringify(goalList));
+            renderGoals();
+          } else if (action === 'delete') {
+            if (confirm('Delete this goal?')) {
+              goalList.splice(idx, 1);
+              localStorage.setItem('studentGoals', JSON.stringify(goalList));
+              renderGoals();
+            }
+          }
+        };
+
+        // Filter
+        document.getElementById('goalFilter').onchange = renderGoals;
+      }
+
+      // --- NOTES: Filtering, Searching, Download ---
+      function renderNotesList() {
+        const ul = document.querySelector('#notesList ul');
+        const subjSel = document.getElementById('notesFilterSubject');
+        const searchEl = document.getElementById('notesSearch');
+        if (!ul) return;
+        const subject = subjSel ? subjSel.value : 'All';
+        const query = (searchEl ? searchEl.value : '').toLowerCase().trim();
+        let list = notes.slice();
+        if (subject && subject !== 'All') list = list.filter(n => n.subject === subject);
+        if (query) list = list.filter(n => n.title.toLowerCase().includes(query) || n.subject.toLowerCase().includes(query) || n.uploader.toLowerCase().includes(query));
+
+        if (!list.length) {
+          ul.innerHTML = `<li style="color: var(--muted); padding: 8px 0;">No notes found.</li>`;
+          return;
+        }
+        ul.innerHTML = list.map(n => `
+          <li>
+            <div>
+              <div style="font-weight: 600;">${n.title}</div>
+              <div style="font-size: 12px; color: var(--muted);">${n.subject} • Uploaded by ${n.uploader} on ${n.date}</div>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap: wrap;">
+              <button class="btn" data-action="download" data-id="${n.id}">Download</button>
+            </div>
+          </li>
+        `).join('');
+      }
+
+      function initNotes() {
+        const subjectSel = document.getElementById('notesFilterSubject');
+        if (subjectSel && subjectSel.options.length <= 1) {
+          subjectSel.innerHTML += subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+        }
+        // Render initial
+        renderNotesList();
+        // Wire events
+        if (subjectSel) subjectSel.addEventListener('change', renderNotesList);
+        const searchEl = document.getElementById('notesSearch');
+        if (searchEl) searchEl.addEventListener('input', renderNotesList);
+        // Delegate download click
+        const listEl = document.getElementById('notesList');
+        if (listEl) listEl.addEventListener('click', (e) => {
+          const btn = e.target.closest('button[data-action="download"]');
+          if (!btn) return;
+          const id = Number(btn.getAttribute('data-id'));
+          const note = notes.find(n => n.id === id);
+          if (!note) return;
+          // Simulate download using a Blob. Replace with real URL if available.
+          const content = `Title: ${note.title}\nSubject: ${note.subject}\nUploader: ${note.uploader}\nDate: ${note.date}\n\nThis is a placeholder file.`;
+          const blob = new Blob([content], { type: 'text/plain' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          // Derive a safe filename
+          const safeName = note.title.replace(/[^a-z0-9\-_. ]/gi, '_');
+          a.download = safeName || 'note.txt';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+        });
+      }
+
+      function initExams() {
+        const nextExam = exams[0];
+        const subjEl = document.getElementById('nextExamSubject');
+        const dateEl = document.getElementById('nextExamDate');
+        const timeEl = document.getElementById('nextExamTime');
+        const sylEl = document.getElementById('nextExamSyllabus');
+        if (nextExam) {
+          if (subjEl) subjEl.textContent = `${nextExam.subject} - ${nextExam.type}`;
+          if (dateEl) dateEl.textContent = nextExam.date;
+          if (timeEl) timeEl.textContent = nextExam.time;
+          if (sylEl) sylEl.textContent = nextExam.syllabus;
+        }
+
+        const tbody = document.getElementById('allExamsTbody');
+        if (tbody) {
+          tbody.innerHTML = exams.map((e, idx) => `
+            <tr>
+              <td>${e.date}</td>
+              <td>${e.subject}</td>
+              <td>${e.type}</td>
+              <td><button class="btn" data-action="remind" data-index="${idx}">Set Reminder</button></td>
+            </tr>
+          `).join('');
+        }
+
+        // Wire main next-exam reminder button
+        const mainBtn = document.getElementById('examReminderBtn');
+        if (mainBtn) mainBtn.onclick = () => scheduleExamReminder(nextExam);
+
+        // Delegate per-row reminders
+        const tableWrap = document.getElementById('examsList');
+        if (tableWrap) tableWrap.addEventListener('click', (e) => {
+          const btn = e.target.closest('button[data-action="remind"]');
+          if (!btn) return;
+          const idx = Number(btn.getAttribute('data-index'));
+          const exam = exams[idx];
+          scheduleExamReminder(exam);
+        });
+      }
+
+      // --- Reminder helpers ---
+      function parseExamDateTime(exam) {
+        // exam.date: YYYY-MM-DD, exam.time: like "10:00 AM"
+        try {
+          const [hourMin, ampm] = exam.time.split(' ');
+          const [h, m] = hourMin.split(':').map(Number);
+          let hour = h % 12;
+          if ((ampm || '').toUpperCase() === 'PM') hour += 12;
+          const [Y, Mo, D] = exam.date.split('-').map(Number);
+          return new Date(Y, (Mo - 1), D, hour, m || 0, 0);
+        } catch (e) {
+          return new Date(exam.date + 'T09:00:00');
+        }
+      }
+
+      async function scheduleExamReminder(exam) {
+        if (!exam) return alert('No exam selected');
+        const when = parseExamDateTime(exam);
+        if (isNaN(when.getTime())) {
+          alert('Could not parse exam date/time.');
+          return;
+        }
+
+        // Try Notifications API (requires user permission and page focus; not reliable in background)
+        if ('Notification' in window) {
+          try {
+            let perm = Notification.permission;
+            if (perm === 'default') perm = await Notification.requestPermission();
+            if (perm === 'granted') {
+              const leadMinutes = 30; // reminder 30 minutes before
+              const fireAt = new Date(when.getTime() - leadMinutes * 60 * 1000);
+              const delay = fireAt.getTime() - Date.now();
+              if (delay <= 0) {
+                new Notification('Exam starting soon', { body: `${exam.subject} • ${exam.type} at ${exam.time}` });
+                alert('Reminder shown immediately (exam is within 30 minutes).');
+              } else {
+                setTimeout(() => {
+                  new Notification('Exam starting soon', { body: `${exam.subject} • ${exam.type} at ${exam.time}` });
+                }, Math.min(delay, 2147483647)); // cap at max setTimeout
+                alert(`Reminder set for ${leadMinutes} minutes before the exam.`);
+              }
+              return;
+            }
+          } catch (_) { /* fall through to ICS */ }
+        }
+
+        // Fallback: generate and download an ICS calendar file
+        const ics = buildICS(exam, when);
+        const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${exam.subject.replace(/\s+/g,'_')}_${exam.date}.ics`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        alert('Downloaded calendar reminder (.ics). Open it to add to your calendar.');
+      }
+
+      function pad(n) { return String(n).padStart(2, '0'); }
+      function toICSDate(dt) {
+        return dt.getUTCFullYear()
+          + pad(dt.getUTCMonth() + 1)
+          + pad(dt.getUTCDate()) + 'T'
+          + pad(dt.getUTCHours()) + pad(dt.getUTCMinutes()) + pad(dt.getUTCSeconds()) + 'Z';
+      }
+      function buildICS(exam, start) {
+        const uid = `${exam.subject}-${exam.date}-${Math.random().toString(36).slice(2)}@Vidyasaar`;
+        const end = new Date(start.getTime() + 60 * 60 * 1000); // 1 hour duration
+        const dtstamp = toICSDate(new Date());
+        const dtstart = toICSDate(start);
+        const dtend = toICSDate(end);
+        const desc = `Syllabus: ${exam.syllabus || ''}`;
+        return [
+          'BEGIN:VCALENDAR',
+          'VERSION:2.0',
+          'PRODID:-//Vidyasaar//Student Exams//EN',
+          'BEGIN:VEVENT',
+          `UID:${uid}`,
+          `DTSTAMP:${dtstamp}`,
+          `DTSTART:${dtstart}`,
+          `DTEND:${dtend}`,
+          `SUMMARY:${exam.subject} - ${exam.type}`,
+          `DESCRIPTION:${desc}`,
+          'END:VEVENT',
+          'END:VCALENDAR'
+        ].join('\r\n');
+      }
+
+      // Realtime updates: listen for BroadcastChannel + storage events
+      (function(){
+        const chan = ('BroadcastChannel' in window) ? new BroadcastChannel('Vidyasaar-room') : null;
+        function handle(payload){
+          if (!payload || payload.type !== 'room-update') return;
+          // Update overrides map
+          try {
+            const key = 'roomOverrides';
+            const map = JSON.parse(localStorage.getItem(key) || '{}');
+            map[payload.subject] = { room: payload.room, ts: payload.ts };
+            localStorage.setItem(key, JSON.stringify(map));
+          } catch(_) {}
+          applyRoomOverrides();
+        }
+        if (chan) chan.addEventListener('message', (e) => handle(e.data));
+        window.addEventListener('storage', (e) => {
+          if (e.key === 'latestRoomUpdate') {
+            try { handle(JSON.parse(e.newValue)); } catch(_) {}
+          }
+        });
+        // Apply last known on load
+        applyRoomOverrides();
+      })();
+
+      // Initialize all sections
+      initHome();
+      initIdealHour();
+      initToday();
+      initAttendance();
+      initGoals();
+      initNotes();
+      initExams();
+
+      // --- Profile: state and behavior ---
+      const profileDefaults = {
+        firstName: 'Aditi',
+        lastName: 'Vishwakarma',
+        preferredName: '',
+        email: '',
+        phone: '',
+        bio: '',
+        website: '',
+        rollClass: 'STU-1025 — CSE-1A',
+        avatar: 'https://i.pravatar.cc/100?img=32'
+      };
+      function loadProfile() {
+        try { return { ...profileDefaults, ...(JSON.parse(localStorage.getItem('studentProfile')||'{}')) }; } catch { return { ...profileDefaults }; }
+      }
+      function saveProfile(data) {
+        localStorage.setItem('studentProfile', JSON.stringify(data));
+      }
+      function renderProfile(p) {
+        const dn = [p.preferredName||'', p.preferredName?'' : `${p.firstName} ${p.lastName}`].find(Boolean) || `${p.firstName} ${p.lastName}`;
+        document.getElementById('profileFirstName').value = p.firstName;
+        document.getElementById('profileLastName').value = p.lastName;
+        document.getElementById('profilePreferredName').value = p.preferredName || '';
+        document.getElementById('profileEmail').value = p.email || '';
+        document.getElementById('profilePhone').value = p.phone || '';
+        document.getElementById('profileBio').value = p.bio || '';
+        document.getElementById('profileWebsite').value = p.website || '';
+        document.getElementById('profileRollClass').value = p.rollClass;
+        const img = document.getElementById('profileAvatarLarge');
+        if (img) img.src = p.avatar || profileDefaults.avatar;
+        const dispName = document.getElementById('profileDisplayName');
+        if (dispName) dispName.textContent = dn;
+        const dispRoll = document.getElementById('profileDisplayRoll');
+        if (dispRoll) dispRoll.textContent = `Roll: ${p.rollClass.replace(' — ', ' • ')}`;
+        // Sidebar small avatar + name
+        const smallImg = document.getElementById('profileAvatar');
+        if (smallImg) smallImg.src = p.avatar || profileDefaults.avatar;
+        const smallName = document.getElementById('studentName');
+        if (smallName) smallName.textContent = dn;
+        const smallRoll = document.getElementById('studentRoll');
+        if (smallRoll) smallRoll.textContent = `Roll: ${p.rollClass.replace(' — ', ' • ')}`;
+      }
+      let currentProfile = loadProfile();
+      renderProfile(currentProfile);
+
+      // avatar upload preview
+      const avatarInput = document.getElementById('profileAvatarInput');
+      if (avatarInput) {
+        avatarInput.addEventListener('change', (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = reader.result;
+            const img = document.getElementById('profileAvatarLarge');
+            if (img) img.src = dataUrl;
+            currentProfile.avatar = dataUrl;
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+      // save/cancel
+      document.getElementById('profileSaveBtn').addEventListener('click', () => {
+        const updated = {
+          ...currentProfile,
+          firstName: document.getElementById('profileFirstName').value.trim() || profileDefaults.firstName,
+          lastName: document.getElementById('profileLastName').value.trim() || profileDefaults.lastName,
+          preferredName: document.getElementById('profilePreferredName').value.trim(),
+          email: document.getElementById('profileEmail').value.trim(),
+          phone: document.getElementById('profilePhone').value.trim(),
+          bio: document.getElementById('profileBio').value.trim(),
+          website: document.getElementById('profileWebsite').value.trim(),
+        };
+        currentProfile = updated;
+        saveProfile(updated);
+        renderProfile(updated);
+        alert('Profile saved');
+      });
+      document.getElementById('profileCancelBtn').addEventListener('click', () => {
+        currentProfile = loadProfile();
+        renderProfile(currentProfile);
+      });
+
+      // --- Settings: state and behavior ---
+      const settingsDefaults = {
+        theme: 'light', // light | dark | system
+        notifEmail: true,
+        notifPush: true,
+        notifSms: false,
+        reminderLead: 30,
+        showEmail: true,
+      };
+      function loadSettings() {
+        try { return { ...settingsDefaults, ...(JSON.parse(localStorage.getItem('studentSettings')||'{}')) }; } catch { return { ...settingsDefaults }; }
+      }
+      function saveSettings(s) { localStorage.setItem('studentSettings', JSON.stringify(s)); }
+      function applyTheme(theme) {
+        let effective = theme;
+        if (theme === 'system') {
+          effective = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.body.classList.toggle('dark', effective === 'dark');
+      }
+      function renderSettings(s) {
+        document.getElementById('settingTheme').value = s.theme;
+        document.getElementById('settingNotifEmail').checked = !!s.notifEmail;
+        document.getElementById('settingNotifPush').checked = !!s.notifPush;
+        document.getElementById('settingNotifSms').checked = !!s.notifSms;
+        document.getElementById('settingReminderLead').value = String(s.reminderLead);
+        document.getElementById('settingShowEmail').checked = !!s.showEmail;
+        applyTheme(s.theme);
+      }
+      let currentSettings = loadSettings();
+      renderSettings(currentSettings);
+
+      // Theme change + listen for system change
+      document.getElementById('settingTheme').addEventListener('change', (e) => {
+        currentSettings.theme = e.target.value;
+        applyTheme(currentSettings.theme);
+      });
+      if (window.matchMedia) {
+        try {
+          window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            if (currentSettings.theme === 'system') applyTheme('system');
+          });
+        } catch(_) { /* Safari fallback ignored */ }
+      }
+
+      // Switches and selects
+      document.getElementById('settingNotifEmail').addEventListener('change', (e)=> currentSettings.notifEmail = e.target.checked);
+      document.getElementById('settingNotifPush').addEventListener('change', (e)=> currentSettings.notifPush = e.target.checked);
+      document.getElementById('settingNotifSms').addEventListener('change', (e)=> currentSettings.notifSms = e.target.checked);
+      document.getElementById('settingReminderLead').addEventListener('change', (e)=> currentSettings.reminderLead = Number(e.target.value));
+      document.getElementById('settingShowEmail').addEventListener('change', (e)=> currentSettings.showEmail = e.target.checked);
+
+      // Save / Export / Reset
+      document.getElementById('settingSaveBtn').addEventListener('click', ()=>{ saveSettings(currentSettings); alert('Settings saved'); });
+      document.getElementById('settingExportBtn').addEventListener('click', ()=>{
+        const data = {
+          profile: loadProfile(),
+          settings: loadSettings(),
+          goals: JSON.parse(localStorage.getItem('studentGoals')||'[]'),
+        };
+        const blob = new Blob([JSON.stringify(data,null,2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'Vidyasaar-student-export.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      });
+      document.getElementById('settingResetBtn').addEventListener('click', ()=>{
+        if (!confirm('Reset settings to default?')) return;
+        currentSettings = { ...settingsDefaults };
+        renderSettings(currentSettings);
+        saveSettings(currentSettings);
+      });
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="charts.js"></script>
+  <script src="student_ai_suggestions.js"></script>
+
+</body>
+
+</html>

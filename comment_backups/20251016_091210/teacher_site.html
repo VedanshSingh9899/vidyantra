@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Takshshila — Teacher Dashboard (Mockup)</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- PDF.js and minimal overlay styles for Reference Notes -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" referrerpolicy="no-referrer"></script>
+  <style>
+    /* Overlay for PDF viewer */
+    .overlay.hidden { display: none; }
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+    .overlay-content { background: #111827; color: #e5e7eb; width: min(96vw, 1200px); height: min(92vh, 900px); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden; }
+    .pdf-toolbar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #0b1220; border-bottom: 1px solid #1f2937; }
+    .pdf-toolbar .spacer { flex: 1; }
+    .pdf-toolbar button, .pdf-toolbar select, .pdf-toolbar input[type="color"] { background: #111827; color: #e5e7eb; border: 1px solid #374151; border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+    .pdf-stage { flex: 1; display: grid; place-items: center; background: #0b1220; position: relative; }
+    .pdf-canvas-wrap { position: relative; overflow: auto; max-width: 100%; max-height: 100%; }
+    #pdfCanvas { display: block; background: #ffffff; }
+    #annoCanvas { position: absolute; inset: 0; pointer-events: auto; }
+    /* --- Profile & Settings Redesign Styles --- */
+    .profile-banner { background: linear-gradient(120deg, rgba(124,58,237,0.15), rgba(96,165,250,0.15)); border-radius: 12px; height: 120px; position: relative; overflow: hidden; border: 1px solid rgba(16,24,40,0.08); }
+    .avatar-wrap { position: relative; margin-top: -48px; display: inline-block; }
+    .avatar-wrap img { width: 110px; height: 110px; border-radius: 16px; object-fit: cover; box-shadow: 0 8px 20px rgba(0,0,0,0.12); border: 3px solid #fff; }
+    .avatar-edit { position: absolute; right: 6px; bottom: 6px; background: var(--accent); color: #fff; border-radius: 999px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; box-shadow: var(--shadow); }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .form-grid .full { grid-column: 1 / -1; }
+    .form-field label { color: var(--muted); font-size: 13px; display:block; margin-bottom:6px; }
+    .form-field input, .form-field textarea, .form-field select { display:block; width:100%; padding:10px; border-radius:10px; border:1px solid #e5e7eb; background: #fff; color: #111827; }
+    .settings-group { margin-bottom: 18px; }
+    .settings-group h4 { margin-bottom: 8px; }
+    .setting-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px dashed rgba(16,24,40,0.08); }
+    .setting-row:last-child { border-bottom:none; }
+    /* Toggle switch */
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .2s; border-radius: 999px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .2s; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+    .switch input:checked + .slider { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+    .switch input:checked + .slider:before { transform: translateX(20px); }
+    /* Dark theme overrides */
+    body.dark { background: #0b0f1a; color: #e5e7eb; }
+    body.dark .card { background: rgba(16,24,40,0.95); color: #e5e7eb; border-color: #1f2937; }
+    body.dark .table th, body.dark .table td { color: #e5e7eb; }
+    body.dark .form-field input, body.dark .form-field textarea, body.dark .form-field select { background:#0f172a; color:#e5e7eb; border-color:#1f2937; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- auto recommondation of test score for student -->
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="profile">
+        <img id="profileAvatar" src="https://i.pravatar.cc/100?img=12" alt="avatar" />
+        <div class="profile-info">
+          <div id="teacherName">Ms. R. Sharma</div>
+          <div id="teacherId">ID: TCHR-034</div>
+        </div>
+      </div> 
+      <nav class="nav">
+        <button class="nav-btn active" data-page="home"><span class="icon">🏠</span> Home</button>
+        <button class="nav-btn" data-page="upcoming"><span class="icon">📘</span> Upcoming Lectures</button>
+        <button class="nav-btn" data-page="attendance"><span class="icon">📊</span> Attendance</button>
+        <button class="nav-btn" data-page="myattendance"><span class="icon">📈</span> Your Attendance</button>
+        <button class="nav-btn" data-page="upload"><span class="icon">📤</span> Upload Notes</button>
+        <button class="nav-btn" data-page="reference"><span class="icon">📚</span> Reference Notes</button>
+        <button class="nav-btn" data-page="profile"><span class="icon">👤</span> Profile</button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <button id="settingsBtn" class="nav-btn" data-page="settings"><span class="icon">⚙️</span> Settings</button>
+      </div>
+    </aside>
+
+    <!-- Main content area -->
+    <main class="main">
+      <!-- Header -->
+      <header class="topbar">
+        <div class="search">
+          <input id="globalSearch" placeholder="Search students, subjects..." />
+        </div>
+        <div class="top-actions">
+          <div class="badge">Teacher</div>
+        </div>
+      </header>
+
+      <!-- Pages container -->
+      <section class="pages">
+
+        <!-- HOME -->
+        <section id="page-home" class="page active">
+          <h2>Dashboard</h2>
+
+          <div class="grid-two">
+            <!-- Student avatars grid -->
+            <div class="card students-card">
+              <h3>Students — Attendance quick view</h3>
+              <div id="studentsGrid" class="students-grid"></div>
+              <button id="openAttendancePortalBtn" class="btn primary" style="margin-top:12px;">Open Attendance Portal</button>
+            </div>
+
+            <!-- Live feeds -->
+            <div class="card live-card">
+              <h3>Live Feeds</h3>
+              <div class="live-feeds">
+                <div class="live-tile">Live Feed 1 (placeholder)</div>
+                <div class="live-tile">Live Feed 2 (placeholder)</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card attendance-log">
+            <h3>Attendance Log (latest dates)</h3>
+            <div id="attendanceLogTable" class="table-wrap"></div>
+          </div>
+        </section>
+
+        <!-- REFERENCE NOTES -->
+        <section id="page-reference" class="page">
+          <h2>Reference Notes</h2>
+          <div class="card">
+            <div class="upload-area" id="refUploadArea">
+              <div class="upload-inner">
+                <div>Drag & drop PDF files here or click to browse</div>
+                <input type="file" id="refPdfInput" accept="application/pdf" multiple />
+              </div>
+            </div>
+            <div class="uploaded-list card">
+              <h4>Your Reference PDFs</h4>
+              <ul id="refNotesList" class="list-compact"></ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- UPCOMING LECTURES -->
+        <section id="page-upcoming" class="page">
+          <h2>Upcoming Lectures</h2>
+          <div class="card">
+            <div class="row controls">
+              <div class="small">Today: <strong id="todayDate"></strong></div>
+            </div>
+
+            <table class="table schedule">
+              <thead>
+                <tr><th>Time</th><th>Class</th><th>Subject</th><th>Room No.</th></tr>
+              </thead>
+              <tbody id="scheduleTbody"></tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <h3>Topic Tracker</h3>
+            <div id="topicList" class="topic-list"></div>
+            <div class="row">
+              <input id="newTopicInput" placeholder="Type today's topic..." />
+              <button id="addTopicBtn" class="btn primary">Add Topic</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ATTENDANCE -->
+        <section id="page-attendance" class="page">
+          <h2>Attendance — Class Records</h2>
+
+          <div class="card">
+            <div class="row filters">
+              <select id="filterClass">
+                <option value="CSE-1">CSE-1</option>
+                <option value="CSE-2">CSE-2</option>
+                <option value="CSE-3">CSE-3</option>
+              </select>
+              <select id="filterSection">
+                <option value="A">Section A</option>
+                <option value="B">Section B</option>
+              </select>
+
+              <button id="applyFilter" class="btn primary">Go</button>
+              <div style="flex:1"></div>
+              <button id="exportCsv" class="btn primary">Export CSV</button>
+              <button id="sendAttend" class="btn primary" onclick="sendAttend()">Send attendence</button>
+            </div>
+
+            <div id="attendanceTable" class="table-wrap"></div>
+          </div>
+        </section>
+
+        <!-- YOUR ATTENDANCE -->
+        <section id="page-myattendance" class="page">
+          <h2>Your Attendance</h2>
+          <div class="ya-att">
+            <style>
+              #page-myattendance .ya-att{--bg:#f4f9fb;--card:#ffffff;--muted:#9aaabb;--accent-attendance:#2670e8;--accent-attendance-mid:#64b5f6;--accent-attendance-low:#90a4ae;--border:rgba(20,40,60,0.06)}
+              #page-myattendance .ya-wrap{max-width:1200px;margin:18px auto;padding:0}
+              #page-myattendance .ya-search-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+              #page-myattendance .ya-legend{display:flex;gap:12px;align-items:center}
+              #page-myattendance .ya-legend-item{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+              #page-myattendance .ya-legend-dot{width:14px;height:14px;border-radius:50%;display:inline-block}
+              #page-myattendance .ya-legend-dot.present{background:var(--accent-attendance)}
+              #page-myattendance .ya-legend-dot.med{background:#fef9c3;border:2px solid #e8be1a}
+              #page-myattendance .ya-legend-dot.ear{background:#f3e8ff;border:2px solid #8143e5}
+              #page-myattendance .ya-legend-dot.cas{background:#ccfbf1;border:2px solid #14b8a6}
+              #page-myattendance .ya-legend-dot.abs{background:#ffebee;border:2px solid #f44336}
+              #page-myattendance .ya-card{background:linear-gradient(180deg,#ffffff 0%, #fbfeff 100%);border-radius:12px;border:1px solid var(--border);box-shadow:0 8px 30px rgba(8,20,30,0.03);overflow:hidden}
+              #page-myattendance .ya-table-head{display:flex;align-items:center;padding:14px 18px;justify-content:space-between;border-bottom:1px solid var(--border);font-weight:600;color:#52606d}
+              #page-myattendance .ya-table-head>div{flex:1;text-align:center}
+              #page-myattendance .ya-table-head>div:first-child{text-align:left}
+              #page-myattendance .ya-table-head>div:last-child{text-align:left}
+              #page-myattendance .ya-table-body{display:flex;flex-direction:column}
+              #page-myattendance .ya-row{display:flex;align-items:center;padding:16px 18px;border-bottom:1px solid var(--border);justify-content:space-between}
+              #page-myattendance .ya-row>div{flex:1;text-align:center}
+              #page-myattendance .ya-row>div:first-child{text-align:left}
+              #page-myattendance .ya-row>div:last-child{text-align:left}
+              #page-myattendance .ya-id{color:#2b3a42;font-weight:500}
+              #page-myattendance .ya-name{font-size:15px;color:#22313a;font-weight:500}
+              #page-myattendance .ya-attendance-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+              #page-myattendance .ya-progress-wrap{display:flex;flex-direction:column;align-items:center;position:relative}
+              #page-myattendance .ya-progress{width:65px;height:65px;position:relative}
+              #page-myattendance .ya-progress svg{transform:rotate(-90deg)}
+              #page-myattendance .ya-progress .ya-percent{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;color:#2b3a42;transition:opacity .3s;font-size:14px}
+              #page-myattendance .ya-leave-boxes{display:flex;gap:4px;margin-top:6px}
+              #page-myattendance .ya-leave-box{width:12px;height:12px;border-radius:2px;cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative}
+              #page-myattendance .ya-leave-box.casual{background:#ccfbf1;border:1.5px solid #14b8a6}
+              #page-myattendance .ya-leave-box.medical{background:#fef9c3;border:1.5px solid #e8be1a}
+              #page-myattendance .ya-leave-box.earned{background:#f3e8ff;border:1.5px solid #8143e5}
+              #page-myattendance .ya-leave-box.absent{background:#ffebee;border:1.5px solid #f44336}
+              #page-myattendance .ya-leave-box.attendance{background:#B3E7FC;border:1.5px solid var(--accent-attendance)}
+              #page-myattendance .ya-leave-box.active{transform:scale(1.3);box-shadow:0 0 6px rgba(0,0,0,.15)}
+              #page-myattendance .ya-badges{display:flex;gap:10px;align-items:center;justify-content:flex-start;flex-wrap:wrap}
+              #page-myattendance .ya-badge{display:inline-block;padding:6px 12px;border-radius:16px;font-weight:600;font-size:12px;cursor:pointer;text-align:center;min-width:70px;box-sizing:border-box}
+              #page-myattendance .ya-badge.cas{background:#ccfbf1;border:2px solid #14b8a6;color:#195e57}
+              #page-myattendance .ya-badge.med{background:#fef9c3;border:2px solid #e8be1a;color:#876d00}
+              #page-myattendance .ya-badge.ear{background:#f3e8ff;border:2px solid #8143e5;color:#4c2995}
+            </style>
+            <div class="ya-wrap">
+              <div class="ya-search-row">
+                <div class="ya-legend">
+                  <div class="ya-legend-item"><span class="ya-legend-dot present"></span><span>Present</span></div>
+                  <div class="ya-legend-item"><span class="ya-legend-dot med"></span><span>Medical</span></div>
+                  <div class="ya-legend-item"><span class="ya-legend-dot ear"></span><span>Earned</span></div>
+                  <div class="ya-legend-item"><span class="ya-legend-dot cas"></span><span>Casual</span></div>
+                  <div class="ya-legend-item"><span class="ya-legend-dot abs"></span><span>Absent</span></div>
+                </div>
+              </div>
+              <div class="ya-card">
+                <div class="ya-table-head">
+                  <div>ID</div>
+                  <div>NAME</div>
+                  <div>ATTENDANCE</div>
+                  <div>LEAVES TAKEN</div>
+                </div>
+                <div class="ya-table-body" id="ya-tbody"></div>
+              </div>
+            </div>
+          </div>
+          <script>
+            (function(){
+              const teachers=[{id:'F105',name:'Dr. R. Sharma',percent:90,leaves:{cas:6,casMax:8,med:2,medMax:10,ear:4,abs:0}}];
+              function getRingColor(p){return p>=60?'#2670e8':'#90a4ae'}
+              function createRow(t){
+                const casPct=((t.leaves.cas/(t.leaves.casMax||1))*100).toFixed(0);
+                const medPct=((t.leaves.med/(t.leaves.medMax||1))*100).toFixed(0);
+                const earPct=((t.leaves.ear/(t.leaves.ear+1))*100).toFixed(0);
+                const row=document.createElement('div');row.className='ya-row';
+                row.innerHTML=`
+                  <div class="ya-id">${t.id}</div>
+                  <div class="ya-name">${t.name}</div>
+                  <div class="ya-attendance-cell">
+                    <div class="ya-progress-wrap">
+                      <div class="ya-progress" data-p="${t.percent}" data-cas="${casPct}" data-med="${medPct}" data-ear="${earPct}">
+                        <svg width="65" height="65" viewBox="0 0 36 36">
+                          <path d="M18 2.0845a15.9155 15.9155 0 1 1 0 31.831a15.9155 15.9155 0 1 1 0-31.831" fill="none" stroke="#e6f3f0" stroke-width="2.4"></path>
+                          <path class="ya-bar" d="M18 2.0845a15.9155 15.9155 0 1 1 0 31.831a15.9155 15.9155 0 1 1 0-31.831" fill="none" stroke="${getRingColor(t.percent)}" stroke-width="2.8" stroke-linecap="round" stroke-dasharray="100 100"></path>
+                        </svg>
+                        <div class="ya-percent">${t.percent}%</div>
+                      </div>
+                      <div class="ya-leave-boxes">
+                        <div class="ya-leave-box attendance" title="Attendance Days"></div>
+                        <div class="ya-leave-box casual" title="Casual Leaves"></div>
+                        <div class="ya-leave-box medical" title="Medical Leaves"></div>
+                        <div class="ya-leave-box earned" title="Earned Leaves"></div>
+                        <div class="ya-leave-box absent" title="Absent Days"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ya-badges">
+                    <span class="ya-badge cas"><div>${t.leaves.cas}/${t.leaves.casMax}</div><div>Casual</div></span>
+                    <span class="ya-badge med"><div>${t.leaves.med}/${t.leaves.medMax}</div><div>Medical</div></span>
+                    <span class="ya-badge ear"><div>${t.leaves.ear}</div><div>Earned</div></span>
+                  </div>`;
+                const progress=row.querySelector('.ya-progress');
+                const percentDiv=progress.querySelector('.ya-percent');
+                const bar=progress.querySelector('.ya-bar');
+                const leaveBoxes=row.querySelectorAll('.ya-leave-box');
+                function highlight(type){leaveBoxes.forEach(b=>{if(b.classList.contains(type))b.classList.add('active')})}
+                function unhighlight(){leaveBoxes.forEach(b=>b.classList.remove('active'))}
+                leaveBoxes.forEach(box=>{
+                  box.addEventListener('mouseenter',()=>{
+                    let value=t.percent;
+                    if(box.classList.contains('earned')){value=progress.dataset.ear;bar.setAttribute('stroke','#8143e5');highlight('earned')}
+                    else if(box.classList.contains('casual')){value=progress.dataset.cas;bar.setAttribute('stroke','#14b8a6');highlight('casual')}
+                    else if(box.classList.contains('medical')){value=progress.dataset.med;bar.setAttribute('stroke','#e8be1a');highlight('medical')}
+                    else if(box.classList.contains('absent')){value=0;bar.setAttribute('stroke','#f44336');highlight('absent')}
+                    bar.setAttribute('stroke-dasharray', value+' '+(100-value));
+                    percentDiv.textContent=value+'%';
+                  });
+                  box.addEventListener('mouseleave',()=>{
+                    percentDiv.textContent=t.percent+'%';
+                    bar.setAttribute('stroke', getRingColor(t.percent));
+                    bar.setAttribute('stroke-dasharray', t.percent+' '+(100-t.percent));
+                    unhighlight();
+                  });
+                });
+                const badgeCas=row.querySelector('.ya-badge.cas');
+                const badgeMed=row.querySelector('.ya-badge.med');
+                const badgeEar=row.querySelector('.ya-badge.ear');
+                badgeCas.addEventListener('mouseenter',()=>{percentDiv.textContent=progress.dataset.cas+'%';bar.setAttribute('stroke','#14b8a6');bar.setAttribute('stroke-dasharray',progress.dataset.cas+' '+(100-progress.dataset.cas));highlight('casual')});
+                badgeCas.addEventListener('mouseleave',()=>{percentDiv.textContent=t.percent+'%';bar.setAttribute('stroke',getRingColor(t.percent));bar.setAttribute('stroke-dasharray',t.percent+' '+(100-t.percent));unhighlight()});
+                badgeMed.addEventListener('mouseenter',()=>{percentDiv.textContent=progress.dataset.med+'%';bar.setAttribute('stroke','#e8be1a');bar.setAttribute('stroke-dasharray',progress.dataset.med+' '+(100-progress.dataset.med));highlight('medical')});
+                badgeMed.addEventListener('mouseleave',()=>{percentDiv.textContent=t.percent+'%';bar.setAttribute('stroke',getRingColor(t.percent));bar.setAttribute('stroke-dasharray',t.percent+' '+(100-t.percent));unhighlight()});
+                badgeEar.addEventListener('mouseenter',()=>{percentDiv.textContent=progress.dataset.ear+'%';bar.setAttribute('stroke','#8143e5');bar.setAttribute('stroke-dasharray',progress.dataset.ear+' '+(100-progress.dataset.ear));highlight('earned')});
+                badgeEar.addEventListener('mouseleave',()=>{percentDiv.textContent=t.percent+'%';bar.setAttribute('stroke',getRingColor(t.percent));bar.setAttribute('stroke-dasharray',t.percent+' '+(100-t.percent));unhighlight()});
+                return row;
+              }
+              function renderRows(data){
+                const tbody=document.getElementById('ya-tbody');
+                if(!tbody) return; tbody.innerHTML='';
+                data.forEach(t=>tbody.appendChild(createRow(t)));
+                document.querySelectorAll('#page-myattendance .ya-progress').forEach(p=>{
+                  const el=p.querySelector('.ya-bar'); const percent=parseInt(p.dataset.p,10); const dash=percent+' '+(100-percent);
+                  el.style.transition='stroke-dasharray 900ms cubic-bezier(.22,.9,.4,1)';
+                  requestAnimationFrame(()=>{ el.setAttribute('stroke-dasharray', dash); });
+                });
+              }
+              renderRows(teachers);
+            })();
+          </script>
+        </section>
+
+        <!-- UPLOAD NOTES -->
+        <section id="page-upload" class="page">
+          <h2>Upload Notes</h2>
+
+          <div class="card">
+            <div class="row filters">
+              <select id="uploadClass">
+                <option value="CSE-1">CSE-1</option>
+                <option value="CSE-2">CSE-2</option>
+              </select>
+              <select id="uploadSection">
+                <option value="A">A</option>
+                <option value="B">B</option>
+              </select>
+              <select id="uploadSubject">
+                <option value="Maths">Maths</option>
+                <option value="English">English</option>
+                <option value="CS">Computer Science</option>
+              </select>
+              <button id="uploadGo" class="btn primary">Go</button>
+            </div>
+
+            <div id="uploadArea" class="upload-area">
+              <div class="upload-inner">
+                <div>Drag & drop files here or click to browse</div>
+                <input type="file" id="fileInput" multiple />
+              </div>
+            </div>
+
+            <div class="uploaded-list card">
+              <h4>Previously uploaded</h4>
+              <ul id="uploadedFiles" class="list-compact"></ul>
+            </div>
+          </div>
+        </section>
+        <!-- PROFILE -->
+        <section id="page-profile" class="page">
+          <h2>Profile</h2>
+          <div class="card">
+            <div class="profile-banner"></div>
+            <div style="display:flex; align-items:flex-end; gap:16px; padding: 0 12px;">
+              <div class="avatar-wrap">
+                <img id="tProfileAvatarLarge" src="https://i.pravatar.cc/100?img=12" alt="avatar" />
+                <button class="avatar-edit" title="Change Photo" onclick="document.getElementById('tProfileAvatarInput').click()">✎</button>
+                <input id="tProfileAvatarInput" type="file" accept="image/*" hidden />
+              </div>
+              <div style="margin-top: 8px;">
+                <div id="tProfileDisplayName" style="font-weight:700; font-size:18px;">Ms. R. Sharma</div>
+                <div style="color:var(--muted); font-size:13px;" id="tProfileDisplayId">ID: TCHR-034</div>
+              </div>
+            </div>
+            <div style="margin-top:16px" class="form-grid">
+              <div class="form-field">
+                <label>First Name</label>
+                <input id="tProfileFirstName" type="text" value="Ms. R." />
+              </div>
+              <div class="form-field">
+                <label>Last Name</label>
+                <input id="tProfileLastName" type="text" value="Sharma" />
+              </div>
+              <div class="form-field">
+                <label>Preferred Name</label>
+                <input id="tProfilePreferredName" type="text" placeholder="Optional" />
+              </div>
+              <div class="form-field">
+                <label>Contact Email</label>
+                <input id="tProfileEmail" type="email" placeholder="you@example.com" />
+              </div>
+              <div class="form-field">
+                <label>Phone</label>
+                <input id="tProfilePhone" type="tel" placeholder="9876543210" />
+              </div>
+              <div class="form-field full">
+                <label>Bio</label>
+                <textarea id="tProfileBio" rows="3" placeholder="A short description about you..."></textarea>
+              </div>
+              <div class="form-field full">
+                <label>Teacher ID / Department</label>
+                <input id="tProfileId" type="text" value="TCHR-034 — CSE" readonly />
+              </div>
+              <div class="form-field full">
+                <label>Website / Portfolio</label>
+                <input id="tProfileWebsite" type="url" placeholder="https://" />
+              </div>
+            </div>
+            <div class="row" style="gap:10px; margin-top:14px;">
+              <button id="tProfileSaveBtn" class="btn primary">Save Changes</button>
+              <button id="tProfileCancelBtn" class="btn">Cancel</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- SETTINGS -->
+        <section id="page-settings" class="page">
+          <h2>Settings</h2>
+          <div class="card">
+            <div class="settings-group">
+              <h4>Appearance</h4>
+              <div class="setting-row">
+                <div>
+                  <div style="font-weight:600">Theme</div>
+                  <div style="color:var(--muted); font-size:13px;">Choose light, dark, or follow system</div>
+                </div>
+                <div class="form-field" style="min-width:180px">
+                  <select id="tSettingTheme">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                    <option value="system">System</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="settings-group">
+              <h4>Notifications</h4>
+              <div class="setting-row">
+                <span>Email notifications</span>
+                <label class="switch"><input id="tSettingNotifEmail" type="checkbox" checked><span class="slider"></span></label>
+              </div>
+              <div class="setting-row">
+                <span>Push notifications</span>
+                <label class="switch"><input id="tSettingNotifPush" type="checkbox" checked><span class="slider"></span></label>
+              </div>
+              <div class="setting-row">
+                <span>SMS notifications</span>
+                <label class="switch"><input id="tSettingNotifSms" type="checkbox"><span class="slider"></span></label>
+              </div>
+            </div>
+            <div class="settings-group">
+              <h4>Class reminders</h4>
+              <div class="setting-row">
+                <span>Reminder lead time</span>
+                <div class="form-field" style="min-width:180px">
+                  <select id="tSettingReminderLead">
+                    <option value="10">10 minutes</option>
+                    <option value="15">15 minutes</option>
+                    <option value="30" selected>30 minutes</option>
+                    <option value="60">60 minutes</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="settings-group">
+              <h4>Privacy</h4>
+              <div class="setting-row">
+                <span>Show my email to colleagues</span>
+                <label class="switch"><input id="tSettingShowEmail" type="checkbox" checked><span class="slider"></span></label>
+              </div>
+            </div>
+            <div class="settings-group">
+              <h4>Data</h4>
+              <div class="row" style="gap:10px">
+                <button class="btn" id="tSettingExportBtn">Export my data</button>
+                <button class="btn danger" id="tSettingResetBtn">Reset settings</button>
+                <div style="flex:1"></div>
+                <button class="btn primary" id="tSettingSaveBtn">Save Settings</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </section>
+
+      <footer class="footer">
+        <small>Vidyasaar - The Intelligent Institution Ecosystem</small>
+      </footer>
+    </main>
+  </div>
+
+  <!-- PDF Overlay Viewer -->
+  <div id="pdfOverlay" class="overlay hidden" aria-hidden="true">
+    <div class="overlay-content">
+      <div class="pdf-toolbar">
+        <button id="pdfCloseBtn">Close ✖</button>
+        <button id="pdfPrevBtn">◀ Prev</button>
+        <span id="pdfPageInfo" style="min-width:110px;text-align:center"></span>
+        <button id="pdfNextBtn">Next ▶</button>
+        <div class="spacer"></div>
+        <label>Tool
+          <select id="toolSelect">
+            <option value="pen">Pen</option>
+            <option value="highlighter">Highlighter</option>
+            <option value="eraser">Eraser</option>
+          </select>
+        </label>
+        <label>Color <input type="color" id="colorPicker" value="#ff0000"></label>
+        <label>Width
+          <select id="widthSelect">
+            <option value="2">2</option>
+            <option value="4">4</option>
+            <option value="6">6</option>
+            <option value="10">10</option>
+          </select>
+        </label>
+        <button id="pdfZoomOut">-</button>
+        <button id="pdfZoomIn">+</button>
+        <button id="annoClear">Clear</button>
+        <button id="annoDownloadPng">Download PNG</button>
+      </div>
+      <div class="pdf-stage">
+        <div id="pdfError" style="display:none;color:#fca5a5;position:absolute;top:10px;left:10px;background:#450a0a;padding:6px 10px;border-radius:6px;border:1px solid #7f1d1d;z-index:2"></div>
+        <div class="pdf-canvas-wrap">
+          <canvas id="pdfCanvas"></canvas>
+          <canvas id="annoCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // Teacher Profile & Settings logic (mirrors student version)
+    document.addEventListener('DOMContentLoaded', () => {
+      // ---- Profile ----
+      const tProfileDefaults = {
+        firstName: 'Ms. fuck.',
+        lastName: 'Sharma',
+        preferredName: '',
+        email: '',
+        phone: '',
+        bio: '',
+        website: '',
+        id: 'TCHR-034 — CSE',
+        avatar: 'https://i.pravatar.cc/100?img=12'
+      };
+      function tLoadProfile(){ try { return { ...tProfileDefaults, ...(JSON.parse(localStorage.getItem('teacherProfile')||'{}')) }; } catch { return { ...tProfileDefaults }; } }
+      function tSaveProfile(p){ localStorage.setItem('teacherProfile', JSON.stringify(p)); }
+      function tRenderProfile(p){
+        const dn = [p.preferredName||'', p.preferredName? '' : `${p.firstName} ${p.lastName}`].find(Boolean) || `${p.firstName} ${p.lastName}`;
+        const img = document.getElementById('tProfileAvatarLarge'); if (img) img.src = p.avatar || tProfileDefaults.avatar;
+        const dispName = document.getElementById('tProfileDisplayName'); if (dispName) dispName.textContent = dn;
+        const dispId = document.getElementById('tProfileDisplayId'); if (dispId) dispId.textContent = `ID: ${p.id.split(' — ')[0]}`;
+        const f = (id,val='') => { const el=document.getElementById(id); if(el) el.value = val; };
+        f('tProfileFirstName', p.firstName);
+        f('tProfileLastName', p.lastName);
+        f('tProfilePreferredName', p.preferredName || '');
+        f('tProfileEmail', p.email || '');
+        f('tProfilePhone', p.phone || '');
+        f('tProfileBio', p.bio || '');
+        f('tProfileWebsite', p.website || '');
+        f('tProfileId', p.id);
+        // Sidebar small avatar + name
+        const smallImg = document.getElementById('profileAvatar'); if (smallImg) smallImg.src = p.avatar || tProfileDefaults.avatar;
+        const smallName = document.getElementById('teacherName'); if (smallName) smallName.textContent = dn;
+        const smallId = document.getElementById('teacherId'); if (smallId) smallId.textContent = `ID: ${p.id.split(' — ')[0]}`;
+      }
+      let tCurrentProfile = tLoadProfile();
+      tRenderProfile(tCurrentProfile);
+      const tAvatarInput = document.getElementById('tProfileAvatarInput');
+      if (tAvatarInput) {
+        tAvatarInput.addEventListener('change', (e) => {
+          const file = e.target.files && e.target.files[0]; if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = reader.result;
+            const img = document.getElementById('tProfileAvatarLarge'); if (img) img.src = dataUrl;
+            tCurrentProfile.avatar = dataUrl;
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+      document.getElementById('tProfileSaveBtn')?.addEventListener('click', () => {
+        const updated = {
+          ...tCurrentProfile,
+          firstName: document.getElementById('tProfileFirstName').value.trim() || tProfileDefaults.firstName,
+          lastName: document.getElementById('tProfileLastName').value.trim() || tProfileDefaults.lastName,
+          preferredName: document.getElementById('tProfilePreferredName').value.trim(),
+          email: document.getElementById('tProfileEmail').value.trim(),
+          phone: document.getElementById('tProfilePhone').value.trim(),
+          bio: document.getElementById('tProfileBio').value.trim(),
+          website: document.getElementById('tProfileWebsite').value.trim(),
+        };
+        tCurrentProfile = updated; tSaveProfile(updated); tRenderProfile(updated); alert('Profile saved');
+      });
+      document.getElementById('tProfileCancelBtn')?.addEventListener('click', () => { tCurrentProfile = tLoadProfile(); tRenderProfile(tCurrentProfile); });
+
+      // ---- Settings ----
+      const tSettingsDefaults = { theme:'light', notifEmail:true, notifPush:true, notifSms:false, reminderLead:30, showEmail:true };
+      function tLoadSettings(){ try{ return { ...tSettingsDefaults, ...(JSON.parse(localStorage.getItem('teacherSettings')||'{}')) }; } catch { return { ...tSettingsDefaults }; } }
+      function tSaveSettings(s){ localStorage.setItem('teacherSettings', JSON.stringify(s)); }
+      function tApplyTheme(theme){ let eff = theme; if(theme==='system'){ eff = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; } document.body.classList.toggle('dark', eff==='dark'); }
+      function tRenderSettings(s){
+        const setVal = (id,val) => { const el=document.getElementById(id); if(!el) return; if(el.tagName==='SELECT') el.value=val; else if(el.type==='checkbox') el.checked=!!val; };
+        setVal('tSettingTheme', s.theme);
+        setVal('tSettingNotifEmail', s.notifEmail);
+        setVal('tSettingNotifPush', s.notifPush);
+        setVal('tSettingNotifSms', s.notifSms);
+        setVal('tSettingReminderLead', String(s.reminderLead));
+        setVal('tSettingShowEmail', s.showEmail);
+        tApplyTheme(s.theme);
+      }
+      let tCurrentSettings = tLoadSettings();
+      tRenderSettings(tCurrentSettings);
+      document.getElementById('tSettingTheme')?.addEventListener('change', (e)=>{ tCurrentSettings.theme = e.target.value; tApplyTheme(tCurrentSettings.theme); });
+      if (window.matchMedia) {
+        try { window.matchMedia('(prefers-color-scheme: dark)')?.addEventListener('change', ()=>{ if (tCurrentSettings.theme==='system') tApplyTheme('system'); }); } catch(_) {}
+      }
+      document.getElementById('tSettingNotifEmail')?.addEventListener('change', (e)=> tCurrentSettings.notifEmail = e.target.checked);
+      document.getElementById('tSettingNotifPush')?.addEventListener('change', (e)=> tCurrentSettings.notifPush = e.target.checked);
+      document.getElementById('tSettingNotifSms')?.addEventListener('change', (e)=> tCurrentSettings.notifSms = e.target.checked);
+      document.getElementById('tSettingReminderLead')?.addEventListener('change', (e)=> tCurrentSettings.reminderLead = Number(e.target.value));
+      document.getElementById('tSettingShowEmail')?.addEventListener('change', (e)=> tCurrentSettings.showEmail = e.target.checked);
+      document.getElementById('tSettingSaveBtn')?.addEventListener('click', ()=>{ tSaveSettings(tCurrentSettings); alert('Settings saved'); });
+      document.getElementById('tSettingExportBtn')?.addEventListener('click', ()=>{
+        const data = { profile: tLoadProfile(), settings: tLoadSettings() };
+        const blob = new Blob([JSON.stringify(data,null,2)], { type:'application/json' });
+        const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='eduverse-teacher-export.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      });
+      document.getElementById('tSettingResetBtn')?.addEventListener('click', ()=>{ if(!confirm('Reset settings to default?')) return; tCurrentSettings={...tSettingsDefaults}; tRenderSettings(tCurrentSettings); tSaveSettings(tCurrentSettings); });
+    });
+    async function sendAttend() {
+    const res = await fetch('/backend/attendence_mailer.php', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},});
+
+    const data = await res.json().catch(() => ({}));
+        if (!data || data.success !== true) {
+            const msg = (data && data.error) ? data.error : 'failed.';
+            alert(msg);
+            return;
+        }
+    if (data.success == true) {
+    alert(data.error);  
+        } 
+    else {
+      alert(data.error);
+      }
+    }
+  </script>
+</body>
+</html>

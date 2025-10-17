@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vidyasaar - Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="login.css" />
+</head>
+
+<body>
+  <div class="login_box" style="background-image: url('lucid.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; background-color: rgba(0,0,0,0.35); background-blend-mode: overlay;">
+    <div class="login-container">
+      <div class="logo">
+        <div class="button-container">
+          <div class="slider student-active"></div>
+          <button class="toggle-button active" onclick="switchRole('student')">Student</button>
+          <button class="toggle-button" onclick="switchRole('teacher')">Teacher</button>
+          <button class="toggle-button" onclick="switchRole('institute')">Institute</button>
+        </div>
+        <h1>Vidyasaar</h1>
+        <p>The Intelligent Institute Ecosystem</p>
+      </div>
+
+      <!-- STUDENT LOGIN -->
+      <form id="student" class="form-group active">
+        <label>Username</label>
+        <input type="text" placeholder="Enter username" required />
+        <label>Password</label>
+        <div class="password-field">
+          <input type="password" placeholder="Enter password" required />
+          <button type="button" class="toggle-password" onclick="togglePassword(this)">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        <button type="button" class="login-btn" onclick="onClickLogin()">Login</button>
+      </form>
+
+      <!-- TEACHER LOGIN -->
+      <form id="teacher" class="form-group">
+        <label>Username</label>
+        <input type="text" placeholder="Enter username" required />
+        <label>Password</label>
+        <div class="password-field">
+          <input type="password" placeholder="Enter password" required />
+          <button type="button" class="toggle-password" onclick="togglePassword(this)">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        <button type="button" class="login-btn" onclick="onClickLogin()">Login</button>
+      </form>
+
+      <!-- INSTITUTE SIGNIN -->
+      <form id="institute-signin" class="form-group">
+        <label>Email Address</label>
+        <input type="email" placeholder="Enter email" required />
+        <label>Password</label>
+        <div class="password-field">
+          <input type="password" placeholder="Enter password" required />
+          <button type="button" class="toggle-password" onclick="togglePassword(this)">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        <button type="button" class="login-btn" onclick="onClickLogin()">Sign In</button>
+        <button type="button" class="back-btn" style="margin-top:10px" onclick="showInstituteSignup()">New Institute? Register</button>
+      </form>
+
+      <!-- INSTITUTE SIGNUP (STEP 1) -->
+      <form id="institute-step1" class="form-group">
+        <label>Institute Name</label>
+        <input type="text" placeholder="Enter institute name" required />
+        <label>Address</label>
+        <input type="text" placeholder="Enter address" required />
+        <label>City / State</label>
+        <input type="text" placeholder="Enter city/state" required />
+        <label>Pincode</label>
+        <input type="text" placeholder="Enter pincode" required />
+  <button type="button" disabled class="login-btn" id="signBtn1">Continue</button>
+        <button type="button" class="back-btn" style="margin-top:10px" onclick="showInstituteSignin()">Already Registered? Sign In</button>
+      </form>
+
+      <!-- INSTITUTE SIGNUP (STEP 2) -->
+      <form id="institute-step2" class="form-group">
+        <h2 style="margin:10px 0px;">Institute Registration</h2>
+        <label>Email Address</label>
+        <input id="instEmail" type="email" placeholder="Enter email" required />
+
+
+        <label>Phone Number</label>
+        <input id="instPhone" type="tel" placeholder="Enter phone number" required />
+
+        <label>Password</label>
+        <input id="instPassword"  type="password" placeholder="Create password" required />
+         <button type="button" class="toggle-password"
+        style="position:absolute;
+            width: fit-content;height: fit-content;
+            bottom: 0px;top:257px;
+            left: 95%;" onclick="togglePassword(this)">
+            <i class="fas fa-eye"></i>
+          </button>
+
+        <label>Confirm Password</label>
+        <input id="instPasswordConfirm" type="password" placeholder="Confirm password" required />
+        <button type="button" class="toggle-password" style="position:absolute;
+            width: fit-content;height: fit-content;
+            bottom: 0px;top:335px;
+            left: 95%;"  onclick="togglePassword(this)">
+            <i class="fas fa-eye"></i>
+          </button>
+        <div class="password-strength" aria-hidden="false">
+          <div class="strength">
+            <div class="fill" id="pwdFill" style="width:0%"></div>
+          </div>
+          <div class="strength-text" id="pwdText">Too short</div>
+        </div>
+         
+        <div class="step-buttons">
+          <button type="button" class="back-btn" onclick="goToStep(1)"><i class="fas fa-arrow-left"></i> Back</button>
+          <button type="button" id="signBtn2" disabled class="login-btn">Continue</button>
+        </div>
+      </form>
+
+      <!-- INSTITUTE SIGNUP (STEP 3 - VERIFY EMAIL) -->
+      <form id="institute-step3" class="form-group">
+        <h2>Verify Email</h2>
+        <p class="info-text">We’ve sent an OTP to your email address.</p>
+        <input type="text" placeholder="Enter OTP" required />
+        <div class="step-buttons">
+          <button type="button" class="back-btn" onclick="goToStep(2)"><i class="fas fa-arrow-left"></i> Back</button>
+          <button type="button" class="login-btn" onclick="dummyVerify()">Verify</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="login.js"></script>
+</body>
+</html>

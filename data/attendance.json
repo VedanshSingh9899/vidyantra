@@ -1,0 +1,58 @@
+[
+  {
+    "id": "STU-001",
+    "name": "Aarav Kumar",
+    "email": "addyprime0070@gmail.com",
+    "phone": "+91 90000 10001",
+    "status": "present"
+  },
+  {
+    "id": "STU-002",
+    "name": "Priya Singh",
+    "email": "priya.singh@example.com",
+    "phone": "+91 90000 10002",
+    "status": "present"
+  },
+  {
+    "id": "STU-003",
+    "name": "Rohan Sharma",
+    "email": "rohan.sharma@example.com",
+    "phone": "+91 90000 10003",
+    "status": "absent"
+  },
+  {
+    "id": "STU-004",
+    "name": "Ananya Patel",
+    "email": "ananya.patel@example.com",
+    "phone": "+91 90000 10004",
+    "status": "present"
+  },
+  {
+    "id": "STU-005",
+    "name": "Arjun Verma",
+    "email": "arjun.verma@example.com",
+    "phone": "+91 90000 10005",
+    "status": "present"
+  },
+  {
+    "id": "STU-006",
+    "name": "Sneha Reddy",
+    "email": "sneha.reddy@example.com",
+    "phone": "+91 90000 10006",
+    "status": "present"
+  },
+  {
+    "id": "STU-007",
+    "name": "Vikram Joshi",
+    "email": "vikram.joshi@example.com",
+    "phone": "+91 90000 10007",
+    "status": "present"
+  },
+  {
+    "id": "STU-008",
+    "name": "Diya Gupta",
+    "email": "diya.gupta@example.com",
+    "phone": "+91 90000 10008",
+    "status": "absent"
+  }
+]

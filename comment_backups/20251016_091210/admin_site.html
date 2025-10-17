@@ -1,0 +1,3333 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Dashboard — Institute Control Panel</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --sidebar-bg: #0f172a;
+      --accent: #3b82f6;
+      --accent-2: #8b5cf6;
+      --muted: #64748b;
+      --radius: 12px;
+      --font-sans: Inter, Roboto, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial;
+
+      /* Light Theme */
+      --bg-light: #f1f5f9;
+      --card-bg-light: #ffffff;
+      --text-light: #1e293b;
+      --border-light: #e2e8f0;
+      --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.05);
+      --header-bg-light: #fdfdff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-light);
+      color: var(--text-light);
+      height: 100vh;
+      overflow: hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    #app {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* --- Sidebar (Unchanged as requested) --- */
+    .sidebar {
+      width: 260px;
+      background: var(--sidebar-bg);
+      color: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      padding: 22px 16px;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(74, 64, 213, 0.12), rgba(59, 130, 246, 0.08));
+      box-shadow: 0 6px 18px rgba(74, 64, 213, 0.06);
+      margin-bottom: 8px;
+    }
+
+    .logo .mark {
+      width: 48px;
+      height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.12);
+    }
+
+    .logo-img {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      object-fit: cover;
+      display: inline-block;
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.12);
+    }
+
+    .logo .title {
+      font-size: 16px;
+      font-weight: 800;
+      color: white;
+      line-height: 1;
+    }
+
+    .logo .subtitle {
+      font-size: 11px;
+      color: rgba(226, 232, 240, 0.9);
+      margin-top: 2px;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 0;
+      color: var(--text);
+      padding: 10px 12px;
+      text-align: left;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all .2s ease-in-out
+    }
+
+    .nav-btn .icon {
+      width: 22px;
+      display: inline-block;
+      text-align: center;
+      transition: transform 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateX(4px);
+    }
+
+    .nav-btn.active {
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      box-shadow: 0 6px 18px rgba(92, 70, 255, 0.12);
+    }
+
+    .nav-btn.active .icon {
+      transform: scale(1.15);
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+    }
+
+    /* --- Main Layout --- */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .topbar {
+      height: 64px;
+      background: var(--header-bg-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--border-light);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+      flex-shrink: 0;
+    }
+
+    .search input {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+      width: 300px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .search input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    /* --- Content Pages --- */
+    .pages {
+      padding: 24px;
+      overflow: auto;
+      height: calc(100vh - 64px - 38px);
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-light);
+    }
+
+    /* --- Cards & Panels --- */
+    .card,
+    .panel {
+      background: var(--card-bg-light);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow-light);
+      margin-bottom: 24px;
+      border: 1px solid var(--border-light);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--card-bg-light);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-light);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border: 1px solid var(--border-light);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .stat-card .icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /*graphs*/
+    /* Main Dashboard Container - using CSS Grid */
+    .dashboard-container {
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-auto-rows: min-content;
+      gap: 2rem;
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    /* General Card Styling */
+    .dashboard-card {
+      background-color: #ffffff;
+      padding: 1.5rem;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+    }
+
+    /* --- KEY LAYOUT FIXES FOR CHART CARDS --- */
+    .enrollment-card,
+    .composition-card {
+      min-width: 0;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* --- UPDATED SECTION TO CONTROL CHART SIZE --- */
+    .chart-wrapper {
+      position: relative;
+      width: 100%;
+      margin-top: 5px;
+      /* REMOVED flex-grow and min-height */
+      /* ADDED a fixed height to control the size */
+      height: 350px;
+    }
+
+    /* Styles for the Donut Chart (Institute Composition) */
+    /*.composition-card .chart-center-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1rem;
+    font-weight: 500;
+    color: #666;
+}
+
+.composition-card .legend {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    flex-shrink: 0;
+}
+
+.composition-card .legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.composition-card .color-box {
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+    margin-right: 8px;
+}*/
+    /* Styles for the Donut Chart (Institute Composition) */
+    .composition-card .chart-center-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1rem;
+      font-weight: 500;
+      color: #666;
+    }
+
+    /* UPDATED: Legend positioning */
+    .composition-card .legend {
+      display: flex;
+      /* Keep as flex */
+      flex-direction: column;
+      /* Stack legend items vertically */
+      align-items: flex-start;
+      /* Align items to the left */
+      justify-content: center;
+      /* Center them vertically if space allows */
+      margin-top: 0;
+      /* Remove top margin from here */
+      padding-left: 1.5rem;
+      /* Add some left padding to align with chart edge */
+      position: absolute;
+      /* Position relative to the .composition-card */
+      right: 0;
+      /* Align to the right side of the card */
+      top: 50%;
+      /* Center vertically */
+      transform: translateY(-50%);
+      /* Adjust for vertical centering */
+      gap: 0.75rem;
+      /* Reduce gap between legend items */
+      flex-shrink: 0;
+      width: 150px;
+      /* Give legend a fixed width */
+    }
+
+    /* Adjust the chart-wrapper to make space for the legend */
+    .composition-card .chart-wrapper {
+      position: relative;
+      width: calc(100% - 150px);
+      /* Make chart narrower to accommodate legend */
+      height: 350px;
+    }
+
+    .composition-card .legend-item {
+      display: flex;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    .composition-card .color-box {
+      width: 12px;
+      height: 12px;
+      border-radius: 4px;
+      margin-right: 8px;
+    }
+
+    .color-box.graduate {
+      background-color: #4a40d5;
+    }
+
+    .color-box.undergraduate {
+      background-color: #6a9eff;
+    }
+
+    .color-box.faculty {
+      background-color: #a4c6ff;
+    }
+
+    /* NEW: Add margin to the heading of the composition card */
+    .composition-card h3 {
+      margin-bottom: 0.5rem;
+      /* Reduce bottom margin of heading */
+    }
+
+    /* ... (rest of your CSS) ... */
+
+    /* IMPORTANT: Update the media query to ensure legend positioning works on larger screens */
+    @media (min-width: 992px) {
+      .dashboard-container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      /* Ensure chart and legend are side-by-side on larger screens */
+      .composition-card {
+        display: flex;
+        flex-direction: row;
+        /* Layout content horizontally */
+        align-items: center;
+        /* Vertically align items in the card */
+        justify-content: space-between;
+        /* Space out content */
+        padding-right: 0;
+        /* Remove right padding for legend */
+      }
+
+      .composition-card h3 {
+        position: absolute;
+        /* Position heading absolutely */
+        top: 1.5rem;
+        /* Align with card top padding */
+        left: 1.5rem;
+        /* Align with card left padding */
+        margin-bottom: 0;
+        /* Remove flex-related margin */
+      }
+
+      /* Reset chart-wrapper width for larger screens if necessary, or let flex handle it */
+      .composition-card .chart-wrapper {
+        width: 65%;
+        /* Allocate space for the chart */
+        flex-shrink: 0;
+        /* Prevent chart from shrinking too much */
+        margin-left: auto;
+        /* Push chart to the right to make space for heading */
+      }
+
+      .composition-card .legend {
+        position: static;
+        /* Reset legend positioning to flow naturally */
+        flex-direction: column;
+        /* Keep stacked vertically */
+        align-items: flex-start;
+        padding-left: 0;
+        margin-right: 1.5rem;
+        /* Add margin to the right of legend */
+        transform: none;
+        /* Remove transform */
+        width: auto;
+        /* Let content define width */
+      }
+    }
+
+    .color-box.graduate {
+      background-color: #4a40d5;
+    }
+
+    .color-box.undergraduate {
+      background-color: #6a9eff;
+    }
+
+    .color-box.faculty {
+      background-color: #a4c6ff;
+    }
+
+
+    /* List Styles (Recent Activity & Upcoming Exams) */
+    .activity-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .activity-list li {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.95rem;
+    }
+
+    .activity-list li .icon-bg {
+      background-color: #eef2ff;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #4a40d5;
+    }
+
+    .activity-list li span {
+      flex-grow: 1;
+      font-weight: 500;
+    }
+
+    .activity-list li time {
+      color: #888;
+      font-size: 0.9rem;
+    }
+
+    /* Interactivity for At a Glance items */
+    .glance-click {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .glance-click:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 8px;
+    }
+
+    .glance-click:hover .icon-bg {
+      background-color: rgba(59, 130, 246, 0.12);
+    }
+
+    /* Applications modal */
+    .apps-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .apps-modal.open {
+      display: flex;
+    }
+
+    .apps-modal__dialog {
+      width: min(820px, 92vw);
+      max-height: 80vh;
+      overflow: hidden;
+      background: var(--card-bg-light);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-light);
+      border: 1px solid var(--border-light);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .apps-modal__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .apps-modal__close {
+      background: transparent;
+      border: none;
+      font-size: 26px;
+      line-height: 1;
+      cursor: pointer;
+      color: var(--muted);
+    }
+
+    .apps-modal__list {
+      padding: 8px 8px 12px;
+      overflow: auto;
+    }
+
+    .apps-empty {
+      padding: 24px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .app-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .app-meta {
+      min-width: 0;
+    }
+
+    .app-title {
+      font-weight: 600;
+    }
+
+    .app-title .muted {
+      font-weight: 400;
+      color: var(--muted);
+    }
+
+    .app-sub {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+
+    .app-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn.success {
+      background: linear-gradient(90deg, #11998eb0, #38ef7eb3);
+      color: #fff;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+    }
+
+    .btn.success:hover {
+      background: linear-gradient(90deg, #11998e, #38ef7d)
+    }
+
+    .btn.danger {
+      background: linear-gradient(90deg, #ff416daf, #ff4b2bbd);
+      color: #fff;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+    }
+
+    .btn.danger:hover {
+      background: linear-gradient(90deg, #ff416c, #ff4b2b);
+    }
+
+    .btn.warning {
+      background: linear-gradient(90deg, #f7ea33c5, #fc4b1ac6);
+      color: #ffffff;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+    }
+
+    .btn.warning:hover {
+      background: linear-gradient(90deg, #f7ea33, #fc4a1a);
+    }
+
+    /* Faculty leave modal (reuses base styles) */
+    .leave-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: #fff7ed;
+      color: #9a3412;
+      border: 1px solid #fed7aa;
+    }
+
+    .leave-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .leave-meta {
+      min-width: 0;
+    }
+
+    .leave-title {
+      font-weight: 600;
+    }
+
+    .leave-sub {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+
+    /* --- Media Query for Responsive Layout --- */
+    @media (min-width: 992px) {
+      .dashboard-container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* --- NEW: Media Query for Responsive Layout --- */
+    /* This rule applies ONLY to screens 992px wide or larger */
+    @media (min-width: 992px) {
+      .dashboard-container {
+        /* Switch back to a two-column layout on larger screens */
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+
+    .stat-card .icon svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .stat-card .value {
+      font-size: 26px;
+      font-weight: 700;
+    }
+
+    .stat-card .label {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    /* Icon Colors */
+    .icon.students {
+      background-color: #e0f2fe;
+      color: #0ea5e9;
+    }
+
+    .icon.faculty {
+      background-color: #e0e7ff;
+      color: #6366f1;
+    }
+
+    .icon.attendance {
+      background-color: #dcfce7;
+      color: #22c55e;
+    }
+
+    .icon.tasks {
+      background-color: #ffedd5;
+      color: #f97316;
+    }
+
+    /* --- Table --- */
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      margin-top: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-light);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    thead th {
+      background: #f8fafc;
+      position: sticky;
+      top: 0;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: #475569;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    tbody tr:hover {
+      background-color: #f1f5f9;
+    }
+
+    /* Attendance specific styling */
+    .attendance-card {
+      padding: 16px;
+      background: linear-gradient(180deg, #fff, #fbfdff);
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(59, 130, 246, 0.06);
+    }
+
+    .attendance-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .attendance-tabs {
+      display: flex;
+      gap: 8px;
+      align-items: center
+    }
+
+    .attendance-stats {
+      display: flex;
+      gap: 12px;
+      align-items: center
+    }
+
+    .attendance-stat {
+      background: #fff;
+      border: 1px solid #e6eefc;
+      padding: 8px 12px;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      min-width: 140px;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.04);
+    }
+
+    .legend {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .legend-item {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .legend-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .legend-dot.present {
+      background: #2670e8;
+    }
+
+    .legend-dot.med {
+      background: #fef9c3;
+      border: 2px solid #e8be1a;
+    }
+
+    .legend-dot.ear {
+      background: #f3e8ff;
+      border: 2px solid #8143e5;
+    }
+
+    .legend-dot.cas {
+      background: #ccfbf1;
+      border: 2px solid #14b8a6;
+    }
+
+    .legend-dot.abs {
+      background: #ffebee;
+      border: 2px solid #f44336;
+    }
+
+    .badges {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .badge.cas {
+      background: #ccfbf1;
+      border: 2px solid #14b8a6;
+      text-align: center;
+      min-width: 70px;
+      border-radius: 16px;
+      font-size: 12px;
+
+      color: #195e57;
+    }
+
+    .badge.med {
+      background: #fef9c3;
+      text-align: center;
+      min-width: 70px;
+      border-radius: 16px;
+      font-size: 12px;
+      border: 2px solid #e8be1a;
+      color: #876d00;
+    }
+
+    .badge.ear {
+      background: #f3e8ff;
+      text-align: center;
+      min-width: 70px;
+      border-radius: 16px;
+      font-size: 12px;
+      border: 2px solid #8143e5;
+      color: #4c2995;
+    }
+
+
+    .badge {
+      background-color: #e6f0ff;
+      color: var(--accent);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    .attendance-stat .label {
+      font-size: 12px;
+      color: #6b7280
+    }
+
+    .attendance-stat .value {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a
+    }
+
+    .day-dot {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      margin: 0 3px;
+    }
+
+    .day-legend {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 13px;
+      color: #475569
+    }
+
+    /* make table content more compact for attendance */
+    #studentsAttendanceTable th,
+    #studentsAttendanceTable td,
+    #teachersAttendanceTable th,
+    #teachersAttendanceTable td {
+      padding: 10px 12px
+    }
+
+    #studentsAttendanceTable td:nth-child(n+3),
+    #teachersAttendanceTable td:nth-child(n+3) {
+      text-align: center
+    }
+
+    #studentsAttendanceTable>thead>tr>th {
+      text-align: center;
+    }
+
+    #studentsAttendanceTable>tbody>tr>td {
+      text-align: center;
+    }
+
+    /* Modifier styles for attendance card per active tab */
+    .attendance-card.attendance--teachers {
+      border: 1px solid rgba(16, 185, 129, 0.12);
+      background: linear-gradient(180deg, #f6fffb, #ffffff);
+    }
+
+    .attendance-card.attendance--students {
+      border: 1px solid rgba(59, 130, 246, 0.12);
+      background: linear-gradient(180deg, #f5f9ff, #ffffff);
+    }
+
+    .action-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s ease;
+    }
+
+    .action-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .action-btn.edit {
+      color: #3b82f6;
+    }
+
+    .action-btn.edit:hover {
+      background-color: #dbeafe;
+    }
+
+    .action-btn.delete {
+      color: #ef4444;
+    }
+
+    .action-btn.delete:hover {
+      background-color: #fee2e2;
+    }
+
+    /* --- Form --- */
+    input,
+    select {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+      width: 100%;
+      background-color: #fff;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      font-size: 14px;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .search-row {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+
+    }
+
+    .font_size {
+      font-size: 12px;
+    }
+
+    .btn {
+      padding: 10px 30px 10px 30px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      border: none;
+      font-size: 14px;
+      transition: background-color 0.2s ease, transform 0.1s ease, opacity 0.2s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      color: white;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    .btn.primary:hover {
+      opacity: 0.9;
+    }
+
+    .btn.ghost {
+      background: transparent;
+      border: 1px solid var(--border-light);
+      color: var(--text-light);
+    }
+
+    .btn.ghost:hover {
+      background-color: #f8fafc;
+    }
+
+    /* Container for the whole page */
+    .uploads-container {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* Styling for the top upload area */
+    .upload-area {
+      display: flex;
+      width: 663px;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      /* Allows items to wrap on smaller screens */
+    }
+
+    .upload-group {
+      flex-grow: 1;
+    }
+
+    .upload-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+
+    .upload-btn {
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      align-self: flex-end;
+      /* Aligns button with the bottom of the input */
+    }
+
+    /* New management area with two columns */
+    .management-area {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    /* Card styling for the new lists */
+    .list-card h3 {
+      margin-bottom: 1.5rem;
+    }
+
+    .uploaded-files-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .uploaded-files-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f8f9fa;
+      /* Light background for each item */
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+    }
+
+    .file-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .file-icon {
+      font-size: 1.5rem;
+      color: #dc3545;
+      /* PDF red color */
+    }
+
+    .file-name {
+      display: block;
+      font-weight: 600;
+      color: #343a40;
+    }
+
+    .upload-date {
+      font-size: 0.8rem;
+      color: #6c757d;
+    }
+
+    /* Action buttons (Edit/Remove) */
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      color: #6c757d;
+      padding: 0.5rem;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .action-btn:hover {
+      background-color: #e9ecef;
+    }
+
+    .edit-btn:hover {
+      color: #007bff;
+      /* Blue for edit */
+    }
+
+    .remove-btn:hover {
+      color: #dc3545;
+      /* Red for remove */
+    }
+
+    /* Responsive adjustments for smaller screens */
+    @media (max-width: 992px) {
+      .management-area {
+        grid-template-columns: 1fr;
+        /* Stack lists on top of each other */
+      }
+    }
+
+    /* Main container for the settings page */
+    .settings-container {
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* Row container to hold cards side-by-side */
+    .settings-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    /* General card styling */
+    .settings-card {
+      background-color: #ffffff;
+      padding: 1.5rem 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .settings-card h3 {
+      margin-bottom: 2rem;
+      font-size: 1.25rem;
+      color: #333;
+      display: flex;
+      align-items: center;
+    }
+
+    .icon-left {
+      margin-right: 0.75rem;
+      color: #4a40d5;
+      /* Main theme color */
+    }
+
+    /* Form styling */
+    .settings-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #555;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="email"],
+    .form-group input[type="password"],
+    .form-group input[type="file"] {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #4a40d5;
+    }
+
+    /* Save button styling */
+    .save-btn {
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      align-self: flex-start;
+      /* Align button to the left */
+      margin-top: 1rem;
+      transition: background-color 0.2s;
+    }
+
+    .save-btn:hover {
+      background-color: #3b33a5;
+    }
+
+    /* Custom Toggle Switch for Maintenance Mode */
+    .toggle-group {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 28px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+    }
+
+    input:checked+.slider {
+      background-color: #4a40d5;
+    }
+
+    input:checked+.slider:before {
+      transform: translateX(22px);
+    }
+
+    .slider.round {
+      border-radius: 34px;
+    }
+
+    .slider.round:before {
+      border-radius: 50%;
+    }
+
+
+    /* Notification Checkboxes */
+    .notifications-form {
+      gap: 1rem;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .checkbox-group label {
+      margin-bottom: 0;
+      font-weight: normal;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+    }
+
+
+    /* Responsive Design */
+    @media (max-width: 992px) {
+      .settings-row {
+        grid-template-columns: 1fr;
+        /* Stack cards on top of each other */
+      }
+    }
+
+    /* --- Footer --- */
+    .footer {
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-top: 1px solid var(--border-light);
+      color: var(--muted);
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    /* --- Dark Theme --- */
+    body.dark {
+      --bg-dark: #0f172a;
+      --card-bg-dark: #1e293b;
+      --text-dark: #e2e8f0;
+      --border-dark: #334155;
+      --shadow-dark: 0 4px 12px rgba(0, 0, 0, 0.2);
+      --header-bg-dark: #1e293b;
+
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    body.dark .topbar,
+    body.dark .footer {
+      border-color: var(--border-dark);
+    }
+
+    body.dark .card,
+    body.dark .panel,
+    body.dark .stat-card {
+      background: var(--card-bg-dark);
+      box-shadow: var(--shadow-dark);
+      border-color: var(--border-dark);
+    }
+
+    body.dark .stat-card:hover {
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    body.dark .search input,
+    body.dark input,
+    body.dark select {
+      background: #334155;
+      border-color: #475569;
+      color: #f1f5f9;
+    }
+
+    body.dark input::placeholder {
+      color: #94a3b8;
+    }
+
+    body.dark thead th {
+      background: #334155;
+      color: #cbd5e1;
+    }
+
+    body.dark tbody tr:nth-child(even) {
+      background-color: #1a2435;
+    }
+
+    body.dark tbody tr:hover {
+      background-color: #334155;
+    }
+
+    body.dark .btn.ghost {
+      border-color: var(--border-dark);
+      color: var(--text-dark);
+    }
+
+    body.dark .btn.ghost:hover {
+      background-color: #334155;
+    }
+
+    body.dark .icon.students {
+      background-color: #1e3a8a;
+      color: #7dd3fc;
+    }
+
+    body.dark .icon.faculty {
+      background-color: #3730a3;
+      color: #a5b4fc;
+    }
+
+    body.dark .icon.attendance {
+      background-color: #166534;
+      color: #86efac;
+    }
+
+    body.dark .icon.tasks {
+      background-color: #7c2d12;
+      color: #fdba74;
+    }
+
+    body.dark .action-btn.edit {
+      color: #60a5fa;
+    }
+
+    body.dark .action-btn.edit:hover {
+      background-color: #334155;
+    }
+
+    body.dark .action-btn.delete {
+      color: #f87171;
+    }
+
+    body.dark .action-btn.delete:hover {
+      background-color: #334155;
+    }
+
+    /* --- Responsive --- */
+    @media (max-width: 1000px) {
+      .sidebar {
+        width: 220px;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+
+      body {
+        overflow: auto;
+      }
+
+      #app {
+        display: block;
+        height: auto;
+      }
+
+      .search input {
+        width: 100%;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        flex-direction: column;
+        height: auto;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .pages {
+        padding: 16px;
+        height: auto;
+      }
+    }
+
+    .switcher {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .btn {
+      padding: 9px 18px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9em;
+      font-weight: 500;
+      transition: all 0.2s ease-in-out;
+      background-color: transparent;
+      color: #555;
+    }
+
+    .btn.active {
+      background-color: #3a86ff;
+      color: white;
+    }
+
+    /* Search Bar */
+    .search-bar {
+      margin-bottom: 20px;
+    }
+
+    .search-bar input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #dfe3e8;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 0.9em;
+    }
+
+    .search-bar input:focus {
+      outline: none;
+      border-color: #3a86ff;
+      box-shadow: 0 0 0 2px rgba(58, 134, 255, 0.2);
+    }
+
+
+    /* New List-Based Layout */
+    .row {
+      display: flex;
+      gap: 16px;
+    }
+
+    /* Controls */
+    .switcher {
+      margin-bottom: 24px;
+    }
+
+    .search-bar,
+    .filter-controls {
+      margin-bottom: 12px;
+    }
+
+    .control-group {
+      flex: 1;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 20px;
+      border: 1px solid #007bff;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1em;
+    }
+
+    .btn.primary {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .btn.ghost {
+      background-color: transparent;
+      color: #007bff;
+    }
+
+    /* Table */
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      margin-top: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-light);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    thead th {
+      background: #f8fafc;
+      position: sticky;
+      top: 0;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: #475569;
+    }
+
+    tbody tr:hover {
+      background-color: #f1f5f9;
+    }
+
+    .progress-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .progress {
+      width: 65px;
+      height: 65px;
+      position: relative;
+    }
+
+    .progress svg {
+      transform: rotate(-90deg);
+    }
+
+    .progress .percent {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #2b3a42;
+      transition: opacity 0.3s;
+      font-size: 14px;
+    }
+
+    .progress-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .progress {
+      width: 65px;
+      height: 65px;
+      position: relative;
+    }
+
+    .progress svg {
+      transform: rotate(-90deg);
+    }
+
+    .progress .percent {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #2b3a42;
+      transition: opacity 0.3s;
+      font-size: 14px;
+    }
+
+    .table-head {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 18px 22px;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-light);
+      font-weight: 600;
+      color: #52606d;
+    }
+
+    .table-head>div {
+      flex: 1;
+      text-align: center;
+    }
+
+    .table-head>div:first-child {
+      text-align: left;
+    }
+
+    .table-head>div:last-child {
+      text-align: left;
+    }
+
+    .table-body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .attendance-row {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border-light);
+      background: transparent;
+      justify-content: space-between;
+    }
+
+    .attendance-row>div {
+      flex: 1;
+      text-align: center;
+    }
+
+    .attendance-row>div:first-child {
+      text-align: left;
+    }
+
+    .attendance-row>div:last-child {
+      text-align: left;
+    }
+
+    .id {
+      color: #2b3a42;
+      font-weight: 500;
+    }
+
+    .name {
+      font-size: 15px;
+      color: #22313a;
+      font-weight: 500;
+    }
+
+    .attendance-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .leave-boxes {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .leave-box {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+
+    .leave-box.casual {
+      background: #ccfbf1;
+      border: 1.5px solid #14b8a6;
+    }
+
+    .leave-box.medical {
+      background: #fef9c3;
+      border: 1.5px solid #e8be1a;
+    }
+
+    .leave-box.earned {
+      background: #f3e8ff;
+      border: 1.5px solid #8143e5;
+    }
+
+    .leave-box.absent {
+      background: #ffebee;
+      border: 1.5px solid #f44336;
+    }
+
+    .leave-box.active {
+      transform: scale(1.3);
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .leave-box.attendance {
+      background: #B3E7FC;
+      border: 1.5px solid #2670e8;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <aside class="sidebar">
+      <div class="logo">
+        <img src="adglogo.jpeg" alt="Institute logo" class="logo-img" />
+        <div>
+          <div class="title">ADGITM Admin</div>
+          <div class="subtitle">Institute Control Panel</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <button class="nav-btn active" data-view="dashboard">🏠 Dashboard</button>
+        <button class="nav-btn" data-view="students">👩‍🎓 Manage Students</button>
+        <button class="nav-btn" data-view="faculty">👨‍🏫 Manage Faculty</button>
+        <button class="nav-btn" data-view="attendance">📊 Attendance</button>
+        <button class="nav-btn" data-view="credentials">🌐 Generate&nbsp;ID</button>
+        <button class="nav-btn" data-view="uploads">📤 Uploads</button>
+        <!-- /*<button class="nav-btn" data-view="exams">📝 Exams</button>*/ -->
+      </nav>
+      <div class="sidebar-bottom">
+        <button id="settingsBtn" class="nav-btn" data-view="settings"><span class="icon">⚙️</span> Settings</button>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <strong id="viewTitle" style="font-size: 18px;">Dashboard</strong>
+          <div style="font-size: 14px; color: var(--muted);">Welcome, Admin</div>
+        </div>
+        <div class="top-actions">
+          <div class="badge" id="roleBadge">Admin</div>
+        </div>
+      </header>
+      <section class="pages">
+        <section id="dashboard" class="view active">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="icon students">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+              </div>
+              <div>
+                <div id="totalStudents" class="value">0</div>
+                <div class="label">Total Students</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="icon faculty">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                </svg>
+              </div>
+              <div>
+                <div id="totalFaculty" class="value">0</div>
+                <div class="label">Total Faculty</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="icon attendance">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+              </div>
+              <div>
+                <div class="value">92.3%</div>
+                <div class="label">Attendance Rate of student</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="icon attendance">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+              </div>
+              <div>
+                <div class="value">98.3%</div>
+                <div class="label">Attendance Rate of Teachers</div>
+              </div>
+            </div>
+            <!-- <div class="stat-card">
+              <div class="icon tasks">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 2v4" />
+                  <path d="M16 2v4" />
+                  <rect width="18" height="18" x="3" y="4" rx="2" />
+                  <path d="M8 10h.01" />
+                  <path d="M12 10h.01" />
+                  <path d="M16 10h.01" />
+                  <path d="M8 14h.01" />
+                  <path d="M12 14h.01" />
+                  <path d="M16 14h.01" />
+                </svg>
+              </div>
+              <div>
+                <div class="value">8</div>
+                <div class="label">Pending Tasks</div>
+              </div>
+            </div> -->
+          </div>
+          <!--Manage Student-->
+          <section class="dashboard-container">
+            <div class="dashboard-card enrollment-card">
+              <h3>Annual Student Enrollment</h3>
+              <div class="chart-wrapper">
+                <canvas id="enrollmentChart" style="height: 312px;width: 310px;"></canvas>
+              </div>
+            </div>
+
+            <div class="dashboard-card composition-card">
+              <h3>Institute Composition</h3>
+              <div class="chart-wrapper">
+                <canvas id="compositionChart" style="margin-top:35px;"></canvas>
+              </div>
+              <div class="legend">
+                <div class="legend-item"><span class="color-box graduate"></span> Graduate</div>
+                <div class="legend-item"><span class="color-box undergraduate"></span> Undergraduate</div>
+                <div class="legend-item"><span class="color-box faculty"></span> Faculty</div>
+              </div>
+            </div>
+
+            <div class="dashboard-card activity-card">
+              <h3>At a Glance</h3>
+              <ul class="activity-list" style="margin-top: 15px;">
+                <li id="glanceNewApps" class="glance-click" role="button" tabindex="0">
+                  <div class="icon-bg"><i class="fa-solid fa-user-plus"></i></div>
+                  <span>New Applications</span>
+                  <time id="newApplicationsCount">0</time>
+                </li>
+                <li id="glancePendingApps" class="glance-click" role="button" tabindex="0">
+                  <div class="icon-bg"><i class="fa-solid fa-stamp"></i></div>
+                  <span>Pending Approvals</span>
+                  <time id="pendingApprovalsCount">0</time>
+                </li>
+                <li id="glanceFacultyLeave" class="glance-click" role="button" tabindex="0">
+                  <div class="icon-bg"><i class="fa-solid fa-person-walking-luggage"></i></div>
+                  <span>Faculty on Leave Today</span>
+                  <time id="facultyLeaveTodayCount">0</time>
+                </li>
+                <!-- <li>
+                  <div class="icon-bg"><i class="fa-solid fa-envelope"></i></div>
+                  <span>Messages Unread</span>
+                  <time>8</time>
+                </li> -->
+              </ul>
+            </div>
+
+            <div class="dashboard-card exams-card">
+              <h3>Upcoming Event</h3>
+              <ul class="activity-list" style="margin-top: 15px;">
+                <li>
+                  <div class="icon-bg"><i class="fa-solid fa-calendar-check"></i></div>
+                  <span>Freshers Orientation</span>
+                  <time>15 Sep</time>
+                </li>
+                <li>
+                  <div class="icon-bg"><i class="fa-solid fa-laptop-code"></i></div>
+                  <span>AI/ML Workshop</span>
+                  <time>20 Sep</time>
+                </li>
+                <li>
+                  <div class="icon-bg"><i class="fa-solid fa-chalkboard-user"></i></div>
+                  <span>Guest Lecture: Dr. Sharma</span>
+                  <time>25 Sep, 11 AM</time>
+                </li>
+                <li>
+                  <div class="icon-bg"><i class="fa-solid fa-trophy"></i></div>
+                  <span>Annual Sports Meet</span>
+                  <time>04 Oct</time>
+                </li>
+                <li>
+                  <div class="icon-bg"><i class="fa-solid fa-microchip"></i></div>
+                  <span>Tech Fest 'Genesis'</span>
+                  <time>10-12 Oct</time>
+                </li>
+              </ul>
+            </div>
+          </section>
+          <!--<div class="panel">
+            <h2>Quick Actions</h2>
+            <div class="row" style="align-items: center;">
+                <button class="btn primary" onclick="document.querySelector('[data-view=students]').click(); showStudentForm();">Add New Student</button>
+                <button class="btn primary" onclick="document.querySelector('[data-view=faculty]').click(); showFacultyForm();">Add New Faculty</button>
+                <button class="btn ghost" onclick="document.querySelector('[data-view=attendance]').click();">Export Attendance</button>
+            </div>
+          </div>-->
+        </section>
+        <!-- Credentials generation -->
+        <section id="credentials" class="view">
+          <h2>Generate IDs (Username & Password)</h2>
+          <div class="card">
+            <div class="row" style="align-items:center;gap:12px;margin-bottom:12px">
+              <label style="min-width:90px; text-align: center;">Target</label>
+              <select id="credTarget" style="width:400px">
+                <option value="students">Students</option>
+                <option value="teachers">Teachers</option>
+              </select>
+              <label style="min-width:60px; text-align: center;">Search</label>
+              <input id="credSearch" placeholder="Search by name or id" style="width:300px">
+              <button class="btn primary" style="padding: 10px 30px 10px 30px; border-radius: 10px;"
+                onclick="generateCredentials()">Get</button>
+              <button class="btn ghost" onclick="downloadCredentials()">Download CSV</button>
+            </div>
+            <div id="credentialsResult"
+              style="max-height:fit-content;overflow:auto;border:1px solid var(--border-light);padding:12px;border-radius:8px;background:#fff">
+              <table style="width:100%;border-collapse:collapse;font-size:14px" id="credentialsTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Password</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="students" class="view">
+          <h2>Manage Students</h2>
+          <div class="card">
+            <div class="row" style="justify-content:space-between;align-items:center">
+              <div class="row" style="flex:1">
+                <input id="studentSearch" placeholder="Search students by name or ID...">
+              </div>
+              <div>
+                <button onclick="downloadStudents()" class="btn ghost">Download List</button>
+                <button class="btn primary" onclick="showStudentForm()">+ Add New Student</button>
+              </div>
+            </div>
+            <div id="studentForm"
+              style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--border-light)">
+              <form onsubmit="addStudent(event)" class="row">
+                <div style="flex:1"><input id="sId" placeholder="Student ID" required></div>
+                <div style="flex:2"><input id="sName" placeholder="Name" required></div>
+                <div style="flex:1"><input id="sEnroll" placeholder="Enrollment Year" type="number"></div>
+                <div style="flex:1"><input id="sPass" placeholder="Passing Year" type="number"></div>
+                <div class="row">
+                  <button class="btn primary" type="submit">Add Student</button>
+                  <button type="button" onclick="hideStudentForm()" class="btn ghost">Cancel</button>
+                </div>
+              </form>
+            </div>
+            <div class="table-wrap">
+              <table id="studentsTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Enroll Year</th>
+                    <th>Pass Year</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+        <!--Manage Faculty-->
+        <section id="faculty" class="view">
+          <h2>Manage Faculty</h2>
+          <div class="card">
+            <div class="row" style="justify-content:space-between;align-items:center">
+              <div class="row" style="flex:1">
+                <input id="facultySearch" placeholder="Search faculty...">
+              </div>
+              <div>
+                <button onclick="downloadFaculty()" class="btn ghost">Download List</button>
+                <button class="btn primary" onclick="showFacultyForm()">+ Add New Faculty</button>
+              </div>
+            </div>
+            <div id="facultyForm"
+              style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--border-light)">
+              <form onsubmit="addFaculty(event)" class="row">
+                <div style="flex:1"><input id="fId" placeholder="Faculty ID" required></div>
+                <div style="flex:2"><input id="fName" placeholder="Name" required></div>
+                <div style="flex:1"><input id="fJoin" placeholder="Joining Year" type="number"></div>
+                <div style="flex:1"><input id="fDept" placeholder="Department"></div>
+                <div class="row">
+                  <button class="btn primary" type="submit">Add Faculty</button>
+                  <button type="button" onclick="hideFacultyForm()" class="btn ghost">Cancel</button>
+                </div>
+              </form>
+            </div>
+            <div class="table-wrap">
+              <table id="facultyTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Join Year</th>
+                    <th>Dept</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+        <!--Attendence-->
+        <section id="attendance" class="view">
+          <h2>Attendance Records</h2>
+
+          <div class="attendance-card">
+            <div class="attendance-top">
+              <div class="attendance-tabs">
+                <button class="btn primary" data-att="teachers" onclick="showAttendance('teachers')">Teachers</button>
+                <button class="btn ghost" data-att="students" onclick="showAttendance('students')">Students</button>
+              </div>
+            </div>
+
+            <div id="attendanceTeachers" style="display:none">
+              <div id="attendanceTeachers" style="display:block">
+                <div class="attendance-wrap">
+                  <div class="search-row">
+                    <div class="search-attendance">
+                      <input id="teacherSearch" style="width:200%;" placeholder="Search teacher by name or ID...">
+                    </div>
+                    <div class="legend">
+                      <div class="legend-item"><span class="legend-dot present"></span><span>Present</span></div>
+                      <div class="legend-item"><span class="legend-dot med"></span><span>Medical</span></div>
+                      <div class="legend-item"><span class="legend-dot ear"></span><span>Earned</span></div>
+                      <div class="legend-item"><span class="legend-dot cas"></span><span>Casual</span></div>
+                      <div class="legend-item"><span class="legend-dot abs"></span><span>Absent</span></div>
+                    </div>
+                  </div>
+                  <div class="attendance-card">
+                    <div class="table-head">
+                      <div class="font_size">ID</div>
+                      <div class="font_size">NAME</div>
+                      <div class="font_size">ATTENDANCE</div>
+                      <div class="font_size">LEAVES TAKEN</div>
+                    </div>
+                    <div class="table-body" id="teacherAttendanceBody"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="attendanceStudents" style="display:none;margin-top:10px">
+              <div class="row" style="margin-bottom:12px">
+                <div style="flex:1">
+                  <label>Class</label>
+                  <select id="studentClass">
+                    <option>Class 9</option>
+                    <option>Class 10</option>
+                    <option>Class 11</option>
+                    <option>Class 12</option>
+                  </select>
+                </div>
+                <div style="flex:1">
+                  <label>Section</label>
+                  <select id="studentSection">
+                    <option>A</option>
+                    <option>B</option>
+                    <option>C</option>
+                  </select>
+                </div>
+                <div style="flex:1">
+                  <label>&nbsp;</label>
+                  <input id="studentAttendanceSearch" placeholder="Search student by name or ID...">
+                </div>
+                <div style="flex:1;max-width:220px;margin-left:12px">
+                  <label>Date</label>
+                  <input type="date" id="attendanceDate">
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table id="studentsAttendanceTable">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th>Mon</th>
+                      <th>Tue</th>
+                      <th>Wed</th>
+                      <th>Thu</th>
+                      <th>Fri</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section id="uploads" class="view">
+          <div class="uploads-container">
+            <div style="display: flex;align-items: center;justify-content: center;gap:28px;">
+              <div class="card upload-area">
+                <div class="upload-group">
+                  <label for="timetable-upload">Upload Timetable</label>
+                  <input type="file" id="timetable-upload" name="timetable-upload">
+                </div>
+                <button class="upload-btn" data-input="timetable-upload" data-list="timetableList">Upload Files</button>
+              </div>
+              <div class="card upload-area">
+                <div class="upload-group">
+                  <label for="exam-schedule-upload">Upload Exams Schedule</label>
+                  <input type="file" id="exam-schedule-upload" name="exam-schedule-upload">
+                </div>
+                <button class="upload-btn" data-input="exam-schedule-upload" data-list="examList">Upload Files</button>
+              </div>
+            </div>
+
+            <div class="management-area">
+              <div class="card list-card">
+                <h3>Uploaded Timetables</h3>
+                <ul id="timetableList" class="uploaded-files-list">
+                  <li>
+                    <div class="file-info">
+                      <i class="fa-solid fa-file-pdf file-icon"></i>
+                      <div>
+                        <span class="file-name">B.Tech Semester 3 Timetable.pdf</span>
+                        <br>
+                        <span class="upload-date">Uploaded: 07/09/2025, 8:29:01 am • 13.5 MB</span>
+                      </div>
+                    </div>
+                    <div class="actions">
+                      <button class="action-btn edit-btn"><i class="fa-solid fa-pencil"></i></button>
+                      <button class="action-btn remove-btn"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                  </li>
+                  <li>
+                    <div class="file-info">
+                      <i class="fa-solid fa-file-pdf file-icon"></i>
+                      <div>
+                        <span class="file-name">M.Tech Final Year Schedule.pdf</span>
+                        <br>
+                        <span class="upload-date">Uploaded: 05/09/2025, 9:30:03 am • 15.4 MB</span>
+                      </div>
+                    </div>
+                    <div class="actions">
+                      <button class="action-btn edit-btn"><i class="fa-solid fa-pencil"></i></button>
+                      <button class="action-btn remove-btn"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="card list-card">
+                <h3>Uploaded Exam Schedules</h3>
+                <ul id="examList" class="uploaded-files-list">
+                  <li>
+                    <div class="file-info">
+                      <i class="fa-solid fa-file-pdf file-icon"></i>
+                      <div>
+                        <span class="file-name">Mid-Term Exam Schedule - Sep 2025.pdf</span>
+                        <br>
+                        <span class="upload-date">Uploaded: 16/09/2025, 11:26:03 am • 10.4 MB</span>
+                      </div>
+                    </div>
+                    <div class="actions">
+                      <button class="action-btn edit-btn"><i class="fa-solid fa-pencil"></i></button>
+                      <button class="action-btn remove-btn"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                  </li>
+                  <li>
+                    <div class="file-info">
+                      <i class="fa-solid fa-file-pdf file-icon"></i>
+                      <div>
+                        <span class="file-name">Final Practical Exams Roster.pdf</span>
+                        <br>
+                        <span class="upload-date">Uploaded: 17/09/2025, 10:35:03 am • 15.87 MB</span>
+                      </div>
+                    </div>
+                    <div class="actions">
+                      <button class="action-btn edit-btn"><i class="fa-solid fa-pencil"></i></button>
+                      <button class="action-btn remove-btn"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+            </div>
+          </div>
+        </section>
+        <section id="settings" class="view">
+          <div class="settings-container">
+
+            <!-- Row 1: Profile and General Settings -->
+            <div class="settings-row">
+
+              <!-- Card 1: Profile Settings -->
+              <div class="card settings-card">
+                <h3><i class="fa-solid fa-user-pen icon-left"></i> Profile Settings</h3>
+                <form class="settings-form">
+                  <div class="form-group">
+                    <label for="admin-name">Admin Name</label>
+                    <input type="text" id="admin-name" value="Administrator">
+                  </div>
+                  <div class="form-group">
+                    <label for="admin-email">Email Address</label>
+                    <input type="email" id="admin-email" value="admin@institute.com">
+                  </div>
+                  <div class="form-group">
+                    <label for="admin-avatar">Profile Picture</label>
+                    <input type="file" id="admin-avatar">
+                  </div>
+                  <button type="submit" class="save-btn">Save Changes</button>
+                </form>
+              </div>
+
+              <!-- Card 2: General Institute Settings -->
+              <div class="card settings-card">
+                <h3><i class="fa-solid fa-building-columns icon-left"></i> General Institute Settings</h3>
+                <form class="settings-form">
+                  <div class="form-group">
+                    <label for="institute-name">Institute Name</label>
+                    <input type="text" id="institute-name" value="My Awesome Institute">
+                  </div>
+                  <div class="form-group">
+                    <label for="institute-logo">Institute Logo</label>
+                    <input type="file" id="institute-logo">
+                  </div>
+                  <div class="form-group toggle-group">
+                    <label for="maintenance-mode">Maintenance Mode</label>
+                    <label class="switch">
+                      <input type="checkbox" id="maintenance-mode">
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+                  <button type="submit" class="save-btn">Save Changes</button>
+                </form>
+              </div>
+
+            </div>
+
+            <!-- Row 2: Security and Notifications -->
+            <div class="settings-row">
+
+              <!-- Card 3: Security -->
+              <div class="card settings-card">
+                <h3><i class="fa-solid fa-shield-halved icon-left"></i> Security</h3>
+                <form class="settings-form">
+                  <div class="form-group">
+                    <label for="current-password">Current Password</label>
+                    <input type="password" id="current-password" placeholder="Enter current password">
+                  </div>
+                  <div class="form-group">
+                    <label for="new-password">New Password</label>
+                    <input type="password" id="new-password" placeholder="Enter new password">
+                  </div>
+                  <div class="form-group">
+                    <label for="confirm-password">Confirm New Password</label>
+                    <input type="password" id="confirm-password" placeholder="Confirm new password">
+                  </div>
+                  <button type="submit" class="save-btn">Update Password</button>
+                </form>
+              </div>
+
+              <!-- Card 4: Notifications -->
+              <div class="card settings-card">
+                <h3><i class="fa-solid fa-bell icon-left"></i> Notification Preferences</h3>
+                <form class="settings-form notifications-form">
+                  <div class="form-group checkbox-group">
+                    <input type="checkbox" id="email-notifications" checked>
+                    <label for="email-notifications">Receive Email Notifications</label>
+                  </div>
+                  <div class="form-group checkbox-group">
+                    <input type="checkbox" id="student-app-notifications">
+                    <label for="student-app-notifications">New Student Applications</label>
+                  </div>
+                  <div class="form-group checkbox-group">
+                    <input type="checkbox" id="system-updates" checked>
+                    <label for="system-updates">System Updates & Alerts</label>
+                  </div>
+                  <div class="form-group checkbox-group">
+                    <input type="checkbox" id="weekly-summary" checked>
+                    <label for="weekly-summary">Weekly Performance Summary</label>
+                  </div>
+                  <button type="submit" class="save-btn">Save Preferences</button>
+                </form>
+              </div>
+
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <footer class="footer">
+        <small>Institute Admin Dashboard • 2025</small>
+      </footer>
+    </main>
+  </div>
+  <script src="admin_chart.js"></script>
+  <script>
+    // --- Applications Modal & State ---
+    // Lightweight, front-end only workflow for New Applications / Pending Approvals
+    // Status values: 'new' | 'pending' | 'approved' | 'denied'
+    const applications = [
+      { id: 'APP-1001', name: 'Rohan Kumar', email: 'rohan.k@example.com', program: 'B.Tech CSE', score: 87, status: 'new' },
+      { id: 'APP-1002', name: 'Priya Nair', email: 'priya.n@example.com', program: 'B.Sc Physics', score: 81, status: 'new' },
+      { id: 'APP-1003', name: 'Vikram Singh', email: 'vikram.s@example.com', program: 'B.Com', score: 74, status: 'pending' },
+      { id: 'APP-1004', name: 'Aisha Khan', email: 'aisha.k@example.com', program: 'B.A Economics', score: 90, status: 'new' }
+    ];
+
+    function getAppsByStatus(status) { return applications.filter(a => a.status === status); }
+
+    function updateGlanceCounts() {
+      const newCount = getAppsByStatus('new').length;
+      const pendingCount = getAppsByStatus('pending').length;
+      const newEl = document.getElementById('newApplicationsCount');
+      const penEl = document.getElementById('pendingApprovalsCount');
+      if (newEl) newEl.textContent = newCount;
+      if (penEl) penEl.textContent = pendingCount;
+    }
+
+    function openApplicationsModal(kind) {
+      const modal = document.getElementById('applicationsModal');
+      const title = document.getElementById('applicationsModalTitle');
+      const list = document.getElementById('applicationsList');
+      if (!modal || !title || !list) return;
+      modal.dataset.view = kind; // 'new' | 'pending'
+      title.textContent = kind === 'pending' ? 'Pending Approvals' : 'New Applications';
+      renderApplicationsList();
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeApplicationsModal() {
+      const modal = document.getElementById('applicationsModal');
+      if (!modal) return;
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    function renderApplicationsList() {
+      const modal = document.getElementById('applicationsModal');
+      const list = document.getElementById('applicationsList');
+      if (!modal || !list) return;
+      const kind = modal.dataset.view === 'pending' ? 'pending' : 'new';
+      const data = getAppsByStatus(kind);
+      list.innerHTML = '';
+      if (!data.length) {
+        const empty = document.createElement('div');
+        empty.className = 'apps-empty';
+        empty.textContent = kind === 'pending' ? 'No applications on hold.' : 'No new applications.';
+        list.appendChild(empty);
+        return;
+      }
+      data.forEach(app => {
+        const row = document.createElement('div');
+        row.className = 'app-row';
+        row.innerHTML = `
+          <div class="app-meta">
+            <div class="app-title">${app.name} <span class="muted">• ${app.id}</span></div>
+            <div class="app-sub">${app.program} • ${app.email} • Interest score: ${app.score}</div>
+          </div>
+          <div class="app-actions"></div>
+        `;
+        const actions = row.querySelector('.app-actions');
+        if (modal.dataset.view === 'pending') {
+          // Approve / Deny only
+          actions.appendChild(makeBtn('Approve', 'success', () => handleApplicationAction(app.id, 'approve')));
+          actions.appendChild(makeBtn('Deny', 'danger', () => handleApplicationAction(app.id, 'deny')));
+        } else {
+          // Approve / Deny / Hold
+          actions.appendChild(makeBtn('Approve', 'success', () => handleApplicationAction(app.id, 'approve')));
+          actions.appendChild(makeBtn('Deny', 'danger', () => handleApplicationAction(app.id, 'deny')));
+          actions.appendChild(makeBtn('Hold', 'warning', () => handleApplicationAction(app.id, 'hold')));
+        }
+        list.appendChild(row);
+      });
+    }
+
+    function makeBtn(text, kind, onClick) {
+      const b = document.createElement('button');
+      b.className = `btn ${kind === 'success' ? 'success' : kind === 'danger' ? 'danger' : kind === 'warning' ? 'warning' : ''}`;
+      b.textContent = text;
+      b.addEventListener('click', onClick);
+      return b;
+    }
+
+    function handleApplicationAction(id, action) {
+      const app = applications.find(a => a.id === id);
+      if (!app) return;
+      if (action === 'approve') app.status = 'approved';
+      else if (action === 'deny') app.status = 'denied';
+      else if (action === 'hold') app.status = 'pending';
+      updateGlanceCounts();
+      // If modal is open, refresh current view
+      const modal = document.getElementById('applicationsModal');
+      if (modal && modal.classList.contains('open')) renderApplicationsList();
+    }
+
+    // Close on overlay or ESC
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeApplicationsModal(); });
+    document.addEventListener('click', (e) => {
+      const modal = document.getElementById('applicationsModal');
+      if (!modal || !modal.classList.contains('open')) return;
+      if (e.target === modal) closeApplicationsModal();
+    });
+
+    const students = [
+      { id: 'S001', name: 'Asha Kumari', enroll: 2021, pass: 2025 },
+      { id: 'S002', name: 'Ravi Verma', enroll: 2020, pass: 2024 },
+      { id: 'S003', name: 'Priya Sharma', enroll: 2022, pass: 2026 },
+      { id: 'S004', name: 'Amit Singh', enroll: 2021, pass: 2025 },
+      { id: 'S005', name: 'Neha Gupta', enroll: 2023, pass: 2027 },
+      { id: 'S006', name: 'Karan Mehta', enroll: 2019, pass: 2023 },
+      { id: 'S007', name: 'Sonal Reddy', enroll: 2021, pass: 2025 },
+      { id: 'S008', name: 'Vikram Joshi', enroll: 2020, pass: 2024 },
+      { id: 'S009', name: 'Maya Iyer', enroll: 2022, pass: 2026 },
+      { id: 'S010', name: 'Arjun Rao', enroll: 2021, pass: 2025 },
+      { id: 'S011', name: 'Zara Khan', enroll: 2023, pass: 2027 },
+      { id: 'S012', name: 'Irfan Sheikh', enroll: 2018, pass: 2022 }
+    ];
+
+    const faculty = [
+      { id: 'F101', name: 'Dr. Anjali Patel', join: 2018, dept: 'Mathematics' },
+      { id: 'F102', name: 'Prof. Raj Kumar', join: 2016, dept: 'Science' },
+      { id: 'F103', name: 'Ms. Sunita Rao', join: 2020, dept: 'English' },
+      { id: 'F104', name: 'Dr. Sanjay Bhat', join: 2015, dept: 'Physics' },
+      { id: 'F105', name: 'Ms. Rekha Menon', join: 2019, dept: 'Computer Science' },
+      { id: 'F106', name: 'Mr. Pradeep Kulkarni', join: 2017, dept: 'Chemistry' },
+      { id: 'F107', name: 'Dr. Meera Nair', join: 2021, dept: 'Biology' }
+    ];
+    const teachersAttendance = [
+      { id: 'F101', name: 'Dr. Anjali Patel', percent: 80, leaves: { cas: 2, casMax: 14, med: 1, medMax: 10, ear: 2, abs: 1 } },
+      { id: 'F102', name: 'Prof. Raj Kumar', percent: 60, leaves: { cas: 3, casMax: 14, med: 4, medMax: 10, ear: 3, abs: 1 } },
+      { id: 'F103', name: 'Ms. Sunita Rao', percent: 80, leaves: { cas: 0, casMax: 14, med: 0, medMax: 10, ear: 2, abs: 1 } },
+      { id: 'F104', name: 'Mr. Amit Sharma', percent: 75, leaves: { cas: 1, casMax: 14, med: 2, medMax: 10, ear: 1, abs: 0 } },
+      { id: 'F105', name: 'Dr. Priya Singh', percent: 90, leaves: { cas: 0, casMax: 14, med: 0, medMax: 10, ear: 0, abs: 0 } },
+    ];
+    // Single initialization when DOM is ready. Consolidates earlier duplicate listeners and
+    // removes references to missing elements (toggleTheme, attendanceClass, attendanceDate)
+    document.addEventListener('DOMContentLoaded', () => {
+      renderCounts();
+      renderStudents();
+      renderFaculty();
+      setupNav();
+
+      // Wire up search inputs safely (check existence)
+      const studentSearchEl = document.getElementById('studentSearch');
+      if (studentSearchEl) studentSearchEl.addEventListener('input', renderStudents);
+
+      const facultySearchEl = document.getElementById('facultySearch');
+      if (facultySearchEl) facultySearchEl.addEventListener('input', renderFaculty);
+
+      const globalSearchEl = document.getElementById('globalSearch');
+      if (globalSearchEl) globalSearchEl.addEventListener('input', globalSearch);
+
+      // Attendance search listeners
+      const teacherSearchEl = document.getElementById('teacherSearch');
+      if (teacherSearchEl) teacherSearchEl.addEventListener('input', renderTeacherAttendance);
+
+      const studentAttendanceSearchEl = document.getElementById('studentAttendanceSearch');
+      if (studentAttendanceSearchEl) studentAttendanceSearchEl.addEventListener('input', renderStudentAttendance);
+
+      const attendanceDateEl = document.getElementById('attendanceDate');
+      if (attendanceDateEl) attendanceDateEl.addEventListener('change', renderStudentAttendance);
+
+      // Wire At a Glance clicks
+      const gaNew = document.getElementById('glanceNewApps');
+      const gaPending = document.getElementById('glancePendingApps');
+      const gaLeave = document.getElementById('glanceFacultyLeave');
+      if (gaNew) gaNew.addEventListener('click', () => openApplicationsModal('new'));
+      if (gaPending) gaPending.addEventListener('click', () => openApplicationsModal('pending'));
+      if (gaLeave) gaLeave.addEventListener('click', () => openFacultyLeaveModal());
+      if (gaNew) gaNew.addEventListener('keypress', (e) => { if (e.key === 'Enter' || e.key === ' ') openApplicationsModal('new'); });
+      if (gaPending) gaPending.addEventListener('keypress', (e) => { if (e.key === 'Enter' || e.key === ' ') openApplicationsModal('pending'); });
+      if (gaLeave) gaLeave.addEventListener('keypress', (e) => { if (e.key === 'Enter' || e.key === ' ') openFacultyLeaveModal(); });
+
+      // Initialize glance counts
+      updateGlanceCounts();
+      updateFacultyLeaveCount();
+
+      // By default, ensure attendance view shows teachers when attendance page is active.
+      if (document.getElementById('attendance').classList.contains('active')) {
+        showAttendance('teachers');
+      }
+    });
+
+    function renderCounts() {
+      document.getElementById('totalStudents').textContent = students.length;
+      document.getElementById('totalFaculty').textContent = faculty.length;
+      updateFacultyLeaveCount();
+    }
+
+    function renderStudents() {
+      const q = document.getElementById('studentSearch').value.toLowerCase();
+      const tbody = document.querySelector('#studentsTable tbody'); tbody.innerHTML = '';
+      students.filter(s => s.id.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)).forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${s.id}</td><td>${s.name}</td><td>${s.enroll || ''}</td><td>${s.pass || ''}</td><td><div class="action-btns"></div></td>`;
+        tbody.appendChild(tr);
+      }); renderCounts();
+    }
+
+    function renderFaculty() {
+      const q = document.getElementById('facultySearch').value.toLowerCase();
+      const tbody = document.querySelector('#facultyTable tbody'); tbody.innerHTML = '';
+      faculty.filter(f => f.id.toLowerCase().includes(q) || f.name.toLowerCase().includes(q)).forEach(f => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${f.id}</td><td>${f.name}</td><td>${f.join || ''}</td><td>${f.dept || ''}</td><td><div class="action-btns"></div></td>`;
+        tbody.appendChild(tr);
+      }); renderCounts();
+    }
+
+    function showStudentForm() { document.getElementById('studentForm').style.display = 'block' }
+    function hideStudentForm() { document.getElementById('studentForm').style.display = 'none' }
+    function addStudent(e) { e.preventDefault(); const id = document.getElementById('sId').value.trim(); if (!id) return; students.push({ id, name: document.getElementById('sName').value, enroll: document.getElementById('sEnroll').value, pass: document.getElementById('sPass').value }); e.target.reset(); hideStudentForm(); renderStudents(); }
+    function deleteStudent(id) { if (!confirm(`Are you sure you want to delete student ${id}?`)) return; const i = students.findIndex(s => s.id === id); if (i > -1) { students.splice(i, 1); renderStudents() } }
+    function editStudent(id) { alert('Edit student ' + id + ' (demo)') }
+
+    function showFacultyForm() { document.getElementById('facultyForm').style.display = 'block' }
+    function hideFacultyForm() { document.getElementById('facultyForm').style.display = 'none' }
+    function addFaculty(e) { e.preventDefault(); const id = document.getElementById('fId').value.trim(); if (!id) return; faculty.push({ id, name: document.getElementById('fName').value, join: document.getElementById('fJoin').value, dept: document.getElementById('fDept').value }); e.target.reset(); hideFacultyForm(); renderFaculty(); }
+    function deleteFaculty(id) { if (!confirm(`Are you sure you want to delete faculty ${id}?`)) return; const i = faculty.findIndex(f => f.id === id); if (i > -1) { faculty.splice(i, 1); renderFaculty() } }
+    function editFaculty(id) { alert('Edit faculty ' + id + ' (demo)') }
+
+    function downloadStudents() { const csv = ['Student ID,Name,Enrollment,Passing', ...students.map(s => `${s.id},${s.name},${s.enroll || ''},${s.pass || ''}`)].join('\n'); const b = new Blob([csv], { type: 'text/csv' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = 'students.csv'; a.click(); URL.revokeObjectURL(u) }
+    function downloadFaculty() { const csv = ['ID,Name,Joining,Dept', ...faculty.map(f => `${f.id},${f.name},${f.join || ''},${f.dept || ''}`)].join('\n'); const b = new Blob([csv], { type: 'text/csv' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = 'faculty.csv'; a.click(); URL.revokeObjectURL(u) }
+
+    function setupNav() {
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          // If the button doesn't have a data-view, ignore
+          const v = btn.getAttribute('data-view');
+          if (!v) return;
+          document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById('viewTitle').textContent = btn.textContent.replace(/^[^ ]+ /, '');
+          document.querySelectorAll('.view').forEach(s => s.classList.remove('active'));
+          const viewEl = document.getElementById(v);
+          if (viewEl) viewEl.classList.add('active');
+
+          // Special-case attendance view to ensure the right sub-view is shown and rendered
+          if (v === 'attendance') {
+            // prefer keeping teachers visible when opening attendance
+            showAttendance('teachers');
+          }
+          // Auto-populate credentials view when opened
+          if (v === 'credentials') {
+            // small delay to ensure view is active
+            setTimeout(() => {
+              const tgt = document.getElementById('credTarget');
+              const search = document.getElementById('credSearch');
+              if (tgt) tgt.addEventListener('change', generateCredentials);
+              if (search) search.addEventListener('input', () => {/* do not spam, but update on enter */ });
+              generateCredentials();
+            }, 10);
+          }
+        });
+      });
+    }
+
+    function globalSearch(e) { const q = e.target.value.toLowerCase(); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); if (q) { document.querySelector('[data-view=students]').click(); } else { document.querySelector('[data-view=dashboard]').click(); } document.getElementById('studentSearch').value = q; document.getElementById('facultySearch').value = q; renderStudents(); renderFaculty(); }
+
+    function saveUploads() { alert('Files saved (demo)') }
+    function exportAttendance() {
+      const clsEl = document.getElementById('attendanceClass');
+      const dateEl = document.getElementById('attendanceDate');
+      const cls = clsEl ? clsEl.value : 'All Classes';
+      const date = dateEl ? dateEl.value : '';
+      if (!dateEl || !date) { alert('Please select a date.'); return; }
+      alert('Exporting attendance for ' + cls + ' on ' + date + ' (demo)');
+    }
+    function toggleTheme() { document.body.classList.toggle('dark') }
+    // --- DATA ---
+    // Updated data structure to match new UI requirements
+
+
+    // Sample attendance data for teachers
+    const teacherAttendance = [
+      {
+        id: 'F101',
+        name: 'Dr. Anjali Patel',
+        days: [
+          { type: 'present' }, { type: 'present' }, { type: 'present' }, { type: 'casual' }, { type: 'present' }
+        ],
+        totalDays: 220,
+        leaves: 5,
+        leaveBreakdown: { casual: 2, medical: 1, earned: 2 }
+      },
+      {
+        id: 'F102',
+        name: 'Prof. Raj Kumar',
+        days: [
+          { type: 'present' }, { type: 'medical' }, { type: 'present' }, { type: 'earned' }, { type: 'present' }
+        ],
+        totalDays: 215,
+        leaves: 10,
+        leaveBreakdown: { casual: 3, medical: 4, earned: 3 }
+      },
+      {
+        id: 'F103',
+        name: 'Ms. Sunita Rao',
+        days: [
+          { type: 'present' }, { type: 'present' }, { type: 'present' }, { type: 'present' }, { type: 'earned' }
+        ],
+        totalDays: 230,
+        leaves: 2,
+        leaveBreakdown: { casual: 0, medical: 0, earned: 2 }
+      }
+    ];
+
+    // Sample student attendance data
+    const studentAttendance = [
+      { id: 'S001', name: 'Asha Kumari', week: [1, 1, 1, 0, 1] },
+      { id: 'S002', name: 'Ravi Verma', week: [1, 0, 1, 1, 1] },
+      { id: 'S003', name: 'Priya Sharma', week: [1, 1, 1, 1, 0] },
+      { id: 'S004', name: 'Amit Singh', week: [1, 1, 0, 1, 1] },
+      { id: 'S005', name: 'Neha Gupta', week: [1, 1, 1, 1, 1] },
+      { id: 'S006', name: 'Karan Mehta', week: [0, 1, 1, 0, 1] },
+      { id: 'S007', name: 'Sonal Reddy', week: [1, 1, 1, 1, 1] },
+      { id: 'S008', name: 'Vikram Joshi', week: [1, 0, 1, 1, 0] },
+      { id: 'S009', name: 'Maya Iyer', week: [1, 1, 1, 0, 1] },
+      { id: 'S010', name: 'Arjun Rao', week: [1, 1, 0, 1, 1] }
+    ];
+
+    // Helper function to get the color for a specific leave type
+    function getLeaveColor(type) {
+      switch (type) {
+        case 'present': return '#10b981'; // green for present
+        case 'medical': return '#f59e0b'; // amber
+        case 'earned': return '#6366f1';  // indigo
+        case 'casual': return '#f472b6';  // pink
+        default: return '#e5e7eb'; // gray
+      }
+    }
+    function getRingColor(percent) {
+      if (percent >= 60) return '#2670e8';
+      return '#90a4ae';
+    }
+
+    // --- Faculty Leave Today ---
+    function computeFacultyOnLeaveToday() {
+      const todayKey = new Date().toISOString().slice(0, 10);
+      // If data has explicit per-date leaves, use it; else simulate by picking lowest attendance
+      const explicit = teachersAttendance.filter(t => t.leavesByDate?.[todayKey]);
+      if (explicit.length) return explicit;
+      const sorted = [...teachersAttendance].sort((a, b) => a.percent - b.percent);
+      return sorted.slice(0, Math.min(2, sorted.length));
+    }
+
+    function updateFacultyLeaveCount() {
+      const el = document.getElementById('facultyLeaveTodayCount');
+      if (!el) return;
+      el.textContent = computeFacultyOnLeaveToday().length;
+    }
+
+    function openFacultyLeaveModal() {
+      const modal = document.getElementById('facultyLeaveModal');
+      if (!modal) return;
+      renderFacultyLeaveList();
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function renderFacultyLeaveList() {
+      const list = document.getElementById('facultyLeaveList');
+      if (!list) return;
+      const onLeave = computeFacultyOnLeaveToday();
+      list.innerHTML = '';
+      if (!onLeave.length) {
+        const empty = document.createElement('div');
+        empty.className = 'apps-empty';
+        empty.textContent = 'No faculty on leave today.';
+        list.appendChild(empty);
+        return;
+      }
+      onLeave.forEach(t => {
+        const row = document.createElement('div');
+        row.className = 'leave-row';
+        row.innerHTML = `
+          <div class="leave-meta">
+            <div class="leave-title">${t.name} <span class="muted">• ${t.id}</span></div>
+            <div class="leave-sub">Department: ${t.dept || '—'} • Attendance: ${t.percent}%</div>
+          </div>
+          <span class="leave-badge"><i class="fa-solid fa-plane-departure"></i> On Leave</span>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    // Renders the teacher attendance table with dynamic progress circles
+    function createTeacherAttendanceRow(t) {
+      const casPct = ((t.leaves.cas / t.leaves.casMax) * 100).toFixed(0);
+      const medPct = ((t.leaves.med / t.leaves.medMax) * 100).toFixed(0);
+      const earPct = ((t.leaves.ear / (t.leaves.ear + 1)) * 100).toFixed(0);
+
+      const row = document.createElement('div');
+      row.className = 'attendance-row';
+      row.innerHTML = `
+        <div class="id font_size" >${t.id}</div>
+        <div class="name font_size" >${t.name}</div>
+        <div class="attendance-cell">
+          <div class="progress-wrap">
+            <div class="progress" data-p="${t.percent}" data-cas="${casPct}" data-med="${medPct}" data-ear="${earPct}">
+              <svg width="65" height="65" viewBox="0 0 36 36">
+                <path d="M18 2.0845a15.9155 15.9155 0 1 1 0 31.831a15.9155 15.9155 0 1 1 0-31.831" fill="none" stroke="#e6f3f0" stroke-width="2.4"></path>
+                <path class="bar" d="M18 2.0845a15.9155 15.9155 0 1 1 0 31.831a15.9155 15.9155 0 1 1 0-31.831" fill="none" stroke="${getRingColor(t.percent)}" stroke-width="2.8" stroke-linecap="round" stroke-dasharray="100 100"></path>
+              </svg>
+              <div class="percent">${t.percent}%</div>
+            </div>
+            <!-- Leave boxes with smaller size -->
+            <div class="leave-boxes">
+                <div class="leave-box attendance" title="Attendance Days"></div>
+              <div class="leave-box casual" title="Casual Leaves"></div>
+              <div class="leave-box medical" title="Medical Leaves"></div>
+              <div class="leave-box earned" title="Earned Leaves"></div>
+              <div class="leave-box absent" title="Absent Days"></div>
+            </div>
+          </div>
+        </div>
+        <div class="badges">
+          <span class="badge cas">
+            <div>${t.leaves.cas}/${t.leaves.casMax}</div>
+            <div>Casual</div>
+          </span>
+          <span class="badge med">
+            <div>${t.leaves.med}/${t.leaves.medMax}</div>
+            <div>Medical</div>
+          </span>
+          <span class="badge ear">
+            <div>${t.leaves.ear}</div>
+            <div>Earned</div>
+          </span>
+        </div>`;
+
+      const progress = row.querySelector('.progress');
+      const percentDiv = progress.querySelector('.percent');
+      const bar = progress.querySelector('.bar');
+      const leaveBoxes = row.querySelectorAll('.leave-box');
+
+      function highlightLeaveBox(type) {
+        leaveBoxes.forEach(box => {
+          if (box.classList.contains(type)) box.classList.add('active');
+        });
+      }
+
+      function removeHighlight() {
+        leaveBoxes.forEach(box => box.classList.remove('active'));
+      }
+
+      // Leave box hover events
+      leaveBoxes.forEach(box => {
+        box.addEventListener('mouseenter', () => {
+          let value = t.percent;
+          if (box.classList.contains('earned')) {
+            value = progress.dataset.ear;
+            bar.setAttribute('stroke', '#8143e5');
+            highlightLeaveBox('earned');
+          } else if (box.classList.contains('casual')) {
+            value = progress.dataset.cas;
+            bar.setAttribute('stroke', '#14b8a6');
+            highlightLeaveBox('casual');
+          } else if (box.classList.contains('medical')) {
+            value = progress.dataset.med;
+            bar.setAttribute('stroke', '#e8be1a');
+            highlightLeaveBox('medical');
+          } else if (box.classList.contains('absent')) {
+            value = 0; // Absent means 0% attendance for that day
+            bar.setAttribute('stroke', '#f44336');
+            highlightLeaveBox('absent');
+          }
+          bar.setAttribute('stroke-dasharray', value + ' ' + (100 - value));
+          percentDiv.textContent = value + '%';
+        });
+        box.addEventListener('mouseleave', () => {
+          percentDiv.textContent = t.percent + '%';
+          bar.setAttribute('stroke', getRingColor(t.percent));
+          bar.setAttribute('stroke-dasharray', t.percent + ' ' + (100 - t.percent));
+          removeHighlight();
+        });
+      });
+
+      // BADGE hover events
+      const badgeCas = row.querySelector('.badge.cas');
+      const badgeMed = row.querySelector('.badge.med');
+      const badgeEar = row.querySelector('.badge.ear');
+
+      badgeCas.addEventListener('mouseenter', () => {
+        percentDiv.textContent = progress.dataset.cas + '%';
+        bar.setAttribute('stroke', '#14b8a6');
+        bar.setAttribute('stroke-dasharray', progress.dataset.cas + ' ' + (100 - progress.dataset.cas));
+        highlightLeaveBox('casual');
+      });
+      badgeCas.addEventListener('mouseleave', () => {
+        percentDiv.textContent = t.percent + '%';
+        bar.setAttribute('stroke', getRingColor(t.percent));
+        bar.setAttribute('stroke-dasharray', t.percent + ' ' + (100 - t.percent));
+        removeHighlight();
+      });
+
+      badgeMed.addEventListener('mouseenter', () => {
+        percentDiv.textContent = progress.dataset.med + '%';
+        bar.setAttribute('stroke', '#e8be1a');
+        bar.setAttribute('stroke-dasharray', progress.dataset.med + ' ' + (100 - progress.dataset.med));
+        highlightLeaveBox('medical');
+      });
+      badgeMed.addEventListener('mouseleave', () => {
+        percentDiv.textContent = t.percent + '%';
+        bar.setAttribute('stroke', getRingColor(t.percent));
+        bar.setAttribute('stroke-dasharray', t.percent + ' ' + (100 - t.percent));
+        removeHighlight();
+      });
+
+      badgeEar.addEventListener('mouseenter', () => {
+        percentDiv.textContent = progress.dataset.ear + '%';
+        bar.setAttribute('stroke', '#8143e5');
+        bar.setAttribute('stroke-dasharray', progress.dataset.ear + ' ' + (100 - progress.dataset.ear));
+        highlightLeaveBox('earned');
+      });
+      badgeEar.addEventListener('mouseleave', () => {
+        percentDiv.textContent = t.percent + '%';
+        bar.setAttribute('stroke', getRingColor(t.percent));
+        bar.setAttribute('stroke-dasharray', t.percent + ' ' + (100 - t.percent));
+        removeHighlight();
+      });
+
+      return row;
+    }
+    function renderTeacherAttendance() {
+      const query = (document.getElementById('teacherSearch').value || '').toLowerCase();
+      const tbody = document.getElementById('teacherAttendanceBody');
+      tbody.innerHTML = '';
+
+      teachersAttendance
+        .filter(t => t.name.toLowerCase().includes(query) || t.id.toLowerCase().includes(query))
+        .forEach(t => tbody.appendChild(createTeacherAttendanceRow(t)));
+
+      document.querySelectorAll('.progress').forEach(p => {
+        const el = p.querySelector('.bar');
+        const percent = parseInt(p.dataset.p, 10);
+        const dash = percent + ' ' + (100 - percent);
+        el.style.transition = 'stroke-dasharray 900ms cubic-bezier(.22,.9,.4,1)';
+        requestAnimationFrame(() => {
+          el.setAttribute('stroke-dasharray', dash);
+        });
+      });
+    }
+    // Renders the student attendance table
+    function renderStudentAttendance() {
+      const query = (document.getElementById('studentAttendanceSearch').value || '').toLowerCase();
+      const tbody = document.querySelector('#studentsAttendanceTable tbody');
+      tbody.innerHTML = '';
+      // aggregate stats for students view
+      let sAggPresent = 0, sAggTotal = 0, sCount = 0;
+
+      // check if a specific date is selected
+      const selDate = document.getElementById('attendanceDate')?.value || '';
+      const isSingleDate = !!selDate;
+
+      const list = studentAttendance.filter(s => s.id.toLowerCase().includes(query) || s.name.toLowerCase().includes(query));
+      list.forEach(s => {
+        const tr = document.createElement('tr');
+        if (isSingleDate) {
+          // If data has per-date mapping (s.dates), prefer that; otherwise map week array by day-of-week
+          let status = 'A'; // default Absent
+          if (s.dates && s.dates[selDate] !== undefined) {
+            const v = s.dates[selDate];
+            status = v === 'present' ? 'P' : (v === 'medical' ? 'M' : 'A');
+          } else if (s.week) {
+            // map date to weekday index (Mon=0 .. Sat=6)
+            const d = new Date(selDate);
+            const wd = d.getDay(); // Sun=0 .. Sat=6
+            const idx = (wd + 6) % 7; // convert so Mon=0
+            const wkIndex = idx; // 0..6, but our week array is 0..4 (Mon-Fri)
+            const val = s.week[wkIndex] !== undefined ? s.week[wkIndex] : 0;
+            status = val === 1 ? 'P' : 'A';
+          }
+          tr.innerHTML = `<td>${s.id}</td><td>${s.name}</td><td style="text-align:center">${status}</td>`;
+          // accumulate present for stats (count P as present)
+          if (status === 'P') sAggPresent += 1;
+          sAggTotal += 1; sCount++;
+        } else {
+          // render full Mon-Fri columns but with P/A/M instead of symbols
+          const cols = s.week.map(d => {
+            if (d === 1) return `<td style="text-align:center;color:green;font-weight:bold">P</td>`;
+            if (d === 'M' || d === 'medical') return `<td style="text-align:center;color:yellow;font-weight:bold">M</td>`;
+            return `<td style="text-align:center;color:red;font-weight:bold">A</td>`;
+          }).join('');
+          tr.innerHTML = `<td>${s.id}</td><td>${s.name}</td>${cols}`;
+          const present = s.week.reduce((a, b) => a + ((b === 1 || b === 'present') ? 1 : 0), 0);
+          sAggPresent += present;
+          sAggTotal += s.week.length;
+          sCount++;
+        }
+        tbody.appendChild(tr);
+      });
+
+      const sAvgEl = document.getElementById('avgAttendance');
+      const totalPresentEl = document.getElementById('totalPresent');
+      const totalLeavesEl = document.getElementById('totalLeaves');
+      const sAvg = sAggTotal ? Math.round((sAggPresent / sAggTotal) * 100) : 0;
+      if (sAvgEl) sAvgEl.textContent = sAvg + '%';
+      if (totalPresentEl) totalPresentEl.textContent = sAggPresent;
+      // students sample data doesn't include leaves; show '-' when not applicable
+      if (totalLeavesEl) totalLeavesEl.textContent = sCount ? '-' : '-';
+    }
+
+    // --- Credentials generation helpers ---
+    let lastCredentials = [];
+
+    function makeUsername(name, id) {
+      const base = (name || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 6) || 'user';
+      return `${base}.${(id || '').toLowerCase()}`;
+    }
+
+    function makePassword(len = 10) {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
+      let p = '';
+      for (let i = 0; i < len; i++) p += chars[Math.floor(Math.random() * chars.length)];
+      return p;
+    }
+
+    function generateCredentials() {
+      const target = document.getElementById('credTarget').value;
+      const q = (document.getElementById('credSearch')?.value || '').toLowerCase().trim();
+      let list = [];
+      if (target === 'students') list = students;
+      else list = teacherAttendance.map(t => ({ id: t.id, name: t.name }));
+
+      if (q) {
+        list = list.filter(item => (item.id || '').toLowerCase().includes(q) || (item.name || '').toLowerCase().includes(q));
+      }
+
+      lastCredentials = list.map(item => ({ id: item.id, name: item.name, username: makeUsername(item.name, item.id), password: makePassword(10) }));
+      renderCredentials();
+    }
+
+    function renderCredentials() {
+      const tbody = document.querySelector('#credentialsTable tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      lastCredentials.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${c.id}</td><td>${c.name}</td><td>${c.username}</td><td>${c.password}</td><td><button class="btn" onclick="copyToClipboard('${c.username}:${c.password}')">Copy</button></td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function downloadCredentials() {
+      if (!lastCredentials.length) { alert('No credentials generated yet'); return; }
+      const csv = ['ID,Name,Username,Password', ...lastCredentials.map(c => `${c.id},${c.name},${c.username},${c.password}`)].join('\n');
+      const b = new Blob([csv], { type: 'text/csv' });
+      const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = 'credentials.csv'; a.click(); URL.revokeObjectURL(u);
+    }
+
+    function copyToClipboard(text) {
+      if (!navigator.clipboard) { alert('Clipboard not available'); return; }
+      navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard')).catch(() => alert('Copy failed'));
+    }
+
+    // Function to switch between Teachers and Students view
+    function showAttendance(type) {
+      const teachersEl = document.getElementById('attendanceTeachers');
+      const studentsEl = document.getElementById('attendanceStudents');
+      const card = document.querySelector('.attendance-card');
+      if (teachersEl) teachersEl.style.display = type === 'teachers' ? 'block' : 'none';
+      if (studentsEl) studentsEl.style.display = type === 'students' ? 'block' : 'none';
+
+      // Update button styles using data-att attribute
+      const buttons = Array.from(document.querySelectorAll('[data-att]'));
+      buttons.forEach(b => {
+        const att = b.getAttribute('data-att');
+        b.classList.toggle('primary', att === type);
+        b.classList.toggle('ghost', att !== type);
+      });
+
+      // Add a modifier class to the attendance card for view-specific styling
+      if (card) {
+        card.classList.remove('attendance--teachers', 'attendance--students');
+        card.classList.add(`attendance--${type}`);
+      }
+
+      if (type === 'teachers') {
+        renderTeacherAttendance();
+      } else {
+        renderStudentAttendance();
+      }
+    }
+
+    // Initial setup when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      // Attach search listeners
+      document.getElementById('teacherSearch').addEventListener('input', renderTeacherAttendance);
+      document.getElementById('studentAttendanceSearch').addEventListener('input', renderStudentAttendance);
+
+      // Show the teachers tab by default when the attendance page is viewed
+      if (document.getElementById('attendance').classList.contains('active')) {
+        showAttendance('teachers');
+      }
+    });
+  </script>
+
+  <!-- Upload buttons: client-side handler (adds files to lists, edit/remove) -->
+  <script>
+    (function () {
+      function niceSize(bytes) {
+        if (!bytes) return '';
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+      }
+
+      // Create list item WITHOUT any Download control (only Edit & Delete)
+      function makeListItem(file) {
+        const li = document.createElement('li');
+
+        const fileInfo = document.createElement('div');
+        fileInfo.className = 'file-info';
+
+        // choose an appropriate file icon based on extension (use PDF icon for .pdf)
+        const icon = document.createElement('i');
+        const fname = (file.name || file.filename || '').toString();
+        const ext = (fname.split('.').length > 1) ? fname.split('.').pop().toLowerCase() : '';
+        let iconClass = 'fa-solid fa-file file-icon';
+        if (ext === 'pdf') iconClass = 'fa-solid fa-file-pdf file-icon';
+        else if (ext === 'doc' || ext === 'docx') iconClass = 'fa-solid fa-file-word file-icon';
+        else if (ext === 'xls' || ext === 'xlsx' || ext === 'csv') iconClass = 'fa-solid fa-file-excel file-icon';
+        icon.className = iconClass;
+        fileInfo.appendChild(icon);
+
+        const meta = document.createElement('div');
+        const name = document.createElement('span');
+        name.className = 'file-name';
+        name.textContent = file.name || (file.filename || 'untitled');
+
+        const uploaded = document.createElement('span');
+        uploaded.className = 'upload-date';
+        uploaded.textContent = 'Uploaded: ' + new Date().toLocaleString() + (file.size ? ' • ' + niceSize(file.size) : '');
+
+        meta.appendChild(name);
+        meta.appendChild(document.createElement('br'));
+        meta.appendChild(uploaded);
+        fileInfo.appendChild(meta);
+
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+
+        const edit = document.createElement('button');
+        edit.className = 'action-btn edit-btn';
+        edit.innerHTML = '<i class="fa-solid fa-pencil"></i>';
+        edit.title = 'Rename';
+        // event listeners for edit/remove are handled via delegation below,
+        // but adding them here for completeness (works for dynamically created items)
+        edit.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const newName = prompt('Rename file', name.textContent);
+          if (newName) name.textContent = newName;
+        });
+
+        const rm = document.createElement('button');
+        rm.className = 'action-btn remove-btn';
+        rm.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+        rm.title = 'Remove';
+        rm.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (confirm('Remove this file?')) li.remove();
+        });
+
+        actions.appendChild(edit);
+        actions.appendChild(rm);
+
+        li.appendChild(fileInfo);
+        li.appendChild(actions);
+        return li;
+      }
+
+      // Event delegation so static list items' Edit & Delete work as well
+      document.addEventListener('click', (e) => {
+        const rm = e.target.closest('.remove-btn');
+        if (rm) {
+          const li = rm.closest('li');
+          if (!li) return;
+          if (confirm('Remove this file?')) li.remove();
+          return;
+        }
+
+        const edit = e.target.closest('.edit-btn');
+        if (edit) {
+          const li = edit.closest('li');
+          if (!li) return;
+          const nameEl = li.querySelector('.file-name');
+          if (!nameEl) return;
+          const newName = prompt('Rename file', nameEl.textContent);
+          if (newName) nameEl.textContent = newName;
+          return;
+        }
+      });
+
+      // Wire Upload buttons
+      document.querySelectorAll('.upload-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const inputId = btn.dataset.input;
+          const listId = btn.dataset.list;
+          if (!inputId || !listId) return alert('Upload target not configured.');
+          const input = document.getElementById(inputId);
+          const list = document.getElementById(listId);
+          if (!input || !list) return alert('Missing input or list element.');
+          if (!input.files || input.files.length === 0) return alert('Please select file(s) to upload.');
+
+          // Client-side demo: add items to UI (no download link)
+          Array.from(input.files).forEach(file => {
+            list.prepend(makeListItem(file));
+          });
+
+          // Optional server upload if data-upload-url set on the button
+          const uploadUrl = btn.dataset.uploadUrl;
+          if (uploadUrl) {
+            const form = new FormData();
+            Array.from(input.files).forEach(f => form.append('files[]', f));
+            try {
+              btn.disabled = true;
+              const originalText = btn.textContent;
+              btn.textContent = 'Uploading...';
+              const res = await fetch(uploadUrl, { method: 'POST', body: form });
+              if (!res.ok) throw new Error('Upload failed');
+              // if server returns saved file info, you could refresh the list from response here
+              btn.textContent = originalText;
+            } catch (err) {
+              alert('Upload failed: ' + (err.message || err));
+            } finally {
+              btn.disabled = false;
+            }
+          }
+
+          // Clear input selection after adding
+          input.value = '';
+        });
+      });
+
+      // Ensure existing static items' edit/remove buttons are keyboard focusable (accessibility)
+      document.querySelectorAll('.uploaded-files-list .edit-btn, .uploaded-files-list .remove-btn').forEach(b => { b.tabIndex = 0; });
+    })();
+  </script>
+  <!-- Applications Modal -->
+  <div id="applicationsModal" class="apps-modal" aria-hidden="true">
+    <div class="apps-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="applicationsModalTitle">
+      <div class="apps-modal__header">
+        <h3 id="applicationsModalTitle">Applications</h3>
+        <button class="apps-modal__close" aria-label="Close"
+          onclick="(function(){document.getElementById('applicationsModal').classList.remove('open');document.body.style.overflow='';})()">&times;</button>
+      </div>
+      <div id="applicationsList" class="apps-modal__list"></div>
+    </div>
+  </div>
+  <!-- Faculty on Leave Modal -->
+  <div id="facultyLeaveModal" class="apps-modal" aria-hidden="true">
+    <div class="apps-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="facultyLeaveModalTitle">
+      <div class="apps-modal__header">
+        <h3 id="facultyLeaveModalTitle">Faculty on Leave Today</h3>
+        <button class="apps-modal__close" aria-label="Close"
+          onclick="(function(){document.getElementById('facultyLeaveModal').classList.remove('open');document.body.style.overflow='';})()">&times;</button>
+      </div>
+      <div id="facultyLeaveList" class="apps-modal__list"></div>
+    </div>
+  </div>
+</body>
+
+</html>

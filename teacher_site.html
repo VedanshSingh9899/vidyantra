@@ -646,24 +646,49 @@
       });
       document.getElementById('tSettingResetBtn')?.addEventListener('click', ()=>{ if(!confirm('Reset settings to default?')) return; tCurrentSettings={...tSettingsDefaults}; tRenderSettings(tCurrentSettings); tSaveSettings(tCurrentSettings); });
     });
-    async function sendAttend() {
-    const res = await fetch('/backend/attendence_mailer.php', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},});
 
-    const data = await res.json().catch(() => ({}));
-        if (!data || data.success !== true) {
-            const msg = (data && data.error) ? data.error : 'failed.';
-            alert(msg);
-            return;
-        }
-    if (data.success == true) {
-    alert(data.error);  
-        } 
-    else {
-      alert(data.error);
-      }
+
+
+async function sendAttend() {
+
+    const btn = document.getElementById("sendBtn");
+    btn.disabled = true; // stop multiple clicks
+    btn.textContent = "Sending...";
+
+  try {
+    const res = await fetch('/sih/backend/hx.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    // Try to parse JSON safely
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      const text = await res.text();
+      console.error('Response not JSON:', text);
+      alert('Server returned invalid JSON.');
+      return;
     }
+
+    // Handle success or failure
+    if (data.success) {
+      alert(data.message || 'Attendance sent successfully!');
+    } else {
+      alert(data.error || 'Attendance failed.');
+    }
+
+  } catch (err) {
+    console.error('Fetch error:', err);
+    alert('Network error or server not reachable.');
+  }
+  finally {
+    btn.disabled = false;
+    btn.textContent = "Send attendance";
+  }
+}
+
   </script>
 </body>
 </html>

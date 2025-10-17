@@ -5,13 +5,14 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+header('Content-Type: application/json');
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\SMTP;
 
 
-require '../vendor/autoload.php';
+require 'login/vendor/autoload.php';
 
 
 
@@ -28,16 +29,16 @@ $sourceMessage = '';
 $studentsJsonPath = __DIR__ . '/students.json';
 if (file_exists($studentsJsonPath)) {
     $jsonData = file_get_contents($studentsJsonPath);
-    $sourceMessage = "<h1>Processing JSON data from students.json file...</h1>";
-    echo "<p>Loaded students.json from: $studentsJsonPath</p>";
+    $sourceMessage = "Processing JSON data from students.json file...";
+    
+    
 }
 else {
-    http_response_code(400); 
+    http_response_code(400);
     $absPath = realpath($studentsJsonPath);
-    die("Error: No JSON data found. Tried: $studentsJsonPath (resolved: $absPath). Please either provide a 'students.json' file or send data via a POST request.");
+    echo json_encode(['success' => false, 'info' => "No JSON data found. Tried: $studentsJsonPath (resolved: $absPath). Please either provide a 'students.json' file or send data via a POST request."]);
+    exit;
 }
-
-echo $sourceMessage;
 
 
 $students = json_decode($jsonData, true);
@@ -76,8 +77,8 @@ try {
             $absenceDate = $student['attendance'][0]['date'] ?? 'a recent date';
 
             if (empty($studentEmail)) {
-                echo "<p style='color:orange;'>Skipping {$studentName}: No email address found.</p>";
-                continue; 
+                echo json_encode(['warning' => "Skipping {$studentName}: No email address found."]);
+                continue;
             }
 
             try {
@@ -106,16 +107,14 @@ try {
 
                 
                 $mail->send();
-                echo "<p style='color:green;'>Message sent successfully to {$studentName} ({$studentEmail})</p>";
 
             } catch (Exception $e) {
-                
-                echo "<p style='color:red;'>Message could not be sent to {$studentName} ({$studentEmail}). Mailer Error: {$mail->ErrorInfo}</p>";
+
+                echo json_encode(['success' => false, 'message' => "Message could not be sent to {$studentName} ({$studentEmail}). Mailer Error: {$mail->ErrorInfo}"]);
             }
         }
     }
-
-    echo "<h3>Processing complete.</h3>";
+    echo json_encode(['success' => true, 'message' => 'Attendance emails processed. Processing complete.']);
 
 } catch (Exception $e) {
     

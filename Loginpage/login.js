@@ -48,14 +48,14 @@ async function onClickLogin() {
         
         const role = (data.role || '').toLowerCase();
         if (role === 'student') {
-            window.location.assign('../student_site.html');
+            window.location.href = 'https://student-site-mpgh.onrender.com/';
         } else if (role === 'teacher') {
-            window.location.assign('../teacher_site.html');
+            window.location.href = 'https://teacher-site.onrender.com/';
         } else if (role === 'institute' || role === 'admin') {
-            window.location.assign('../admin_site.html');
-        } else {
+            window.location.href = 'https://admin-site-08sb.onrender.com/';
             
-            window.location.assign('../student_site.html');
+        } else {
+            window.location.href = 'https://student-site-mpgh.onrender.com/';
         }
         return;
     } catch (err) {

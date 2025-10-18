@@ -12,7 +12,7 @@ use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\SMTP;
 
 
-require 'login/vendor/autoload.php';
+require 'vendor/autoload.php';
 
 
 
